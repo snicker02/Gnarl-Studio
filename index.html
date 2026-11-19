@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solid 3D Gnarl Studio</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <aside id="side"><header><b>Gnarl Studio</b> <span id="ver"></span></header><div id="ui"></div><footer id="credit">Created with help from Claude AI</footer></aside>
+  <main id="stage">
+    <canvas id="gl"></canvas>
+    <div id="hud"></div>
+    <div id="err" class="hide"></div>
+    <div id="bar">
+      <button id="bPlay" title="Pause / play animation">⏸</button>
+      <button id="bCam" title="Reset camera">⌖ Camera</button>
+      <button id="bRand" title="Random seed + jitter">🎲 Reseed</button>
+      <button id="bSnap" title="Save viewer PNG">📷 Snapshot</button>
+      <button id="bRec" title="Record the live viewer to WebM">⏺ Record</button>
+      <button id="bVid" title="Render a deterministic video (MP4)">🎬 Video</button>
+      <button id="bHQ" class="primary">HQ export</button>
+    </div>
+  </main>
+</div>
+<div id="modal" class="hide"><div class="card">
+  <h3>HQ export</h3>
+  <div class="resrow" id="resBtns"></div>
+  <div class="wh"><label>Width <input id="hqW" type="number" min="64" max="8192" step="1"></label><label>Height <input id="hqH" type="number" min="64" max="8192" step="1"></label></div>
+  <p class="note" id="hqNote"></p>
+  <div class="prog"><div id="progBar"></div></div>
+  <div class="mrow"><button id="hqGo" class="primary">Render PNG</button><button id="hqCancel">Close</button></div>
+</div></div>
+<div id="vmodal" class="hide"><div class="card">
+  <h3>Video export</h3>
+  <div class="resrow" id="vRes"></div>
+  <div class="vgrid" id="vForm"></div>
+  <canvas id="vPrev" width="320" height="180"></canvas>
+  <p class="note" id="vNote"></p>
+  <div class="prog"><div id="vBar"></div></div>
+  <div class="mrow"><button id="vGo" class="primary">Render video</button><button id="vCancel">Close</button></div>
+</div></div>
+<input type="file" id="fImg" accept="image/*" hidden>
+<input type="file" id="fJson" accept=".json,application/json" hidden>
+<script type="module" src="main.js"></script>
+</body>
+</html>

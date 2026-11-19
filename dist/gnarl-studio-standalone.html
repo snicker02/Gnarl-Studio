@@ -1,0 +1,2339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solid 3D Gnarl Studio</title>
+<style>
+:root{--bg:#0b0c12;--panel:#12141d;--line:#252839;--tx:#d7daea;--dim:#7d83a0;--ac:#f5a524;--ac2:#4fd1c5}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:13px/1.35 system-ui,Segoe UI,Roboto,sans-serif}
+#app{display:flex;height:100%}
+#side{width:320px;min-width:320px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column}
+#side header{padding:10px 14px;border-bottom:1px solid var(--line);font-size:15px}#ver{color:var(--dim);font-size:11px;margin-left:6px}
+#ui{flex:1;display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tab{flex:1;background:none;border:0;color:var(--dim);padding:8px 4px;cursor:pointer;border-bottom:2px solid transparent}
+.tab.on{color:var(--ac);border-bottom-color:var(--ac)}
+.panes{flex:1;overflow:auto;padding:8px 12px 24px}.pane{display:none}.pane.on{display:block}
+.hide{display:none!important}
+.head{margin:14px 0 4px;color:var(--ac2);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.info{color:var(--dim);font-size:12px;margin:4px 0 8px}
+.row.s,.row.select,.row.color{display:grid;grid-template-columns:1fr 22px 52px;align-items:center;column-gap:6px;margin:3px 0}
+.row.s label,.row.select label,.row.color label{grid-column:1}
+.row.s input[type=range]{grid-column:1/3;width:100%}.row.s .val{grid-column:3;text-align:right;color:var(--ac);font-variant-numeric:tabular-nums}
+.row.select select{grid-column:1/4;width:100%}.row.color input{grid-column:3}
+.rst{background:none;border:0;color:var(--dim);cursor:pointer;padding:0}.rst:hover{color:var(--ac)}.rst.dim{opacity:.25}
+select,input[type=number]{background:#1a1d2a;color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:4px}
+input[type=range]{accent-color:var(--ac)}
+.pals{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.pal{height:26px;border:2px solid transparent;border-radius:5px;cursor:pointer}.pal.on{border-color:#fff}
+.btn,#bar button,.seg button,.mrow button,.preset{background:#1a1d2a;border:1px solid var(--line);color:var(--tx);border-radius:5px;padding:6px 10px;cursor:pointer}
+.btn:hover,#bar button:hover,.preset:hover,.seg button:hover{border-color:var(--ac)}
+.primary{background:var(--ac)!important;color:#111!important;border-color:var(--ac)!important;font-weight:600}
+.seg{display:flex;margin-top:6px}.seg button{flex:1;border-radius:0}.seg .on{background:var(--ac2);color:#111}
+.plist{display:grid;gap:5px}.preset{text-align:left}.preset.on{border-color:var(--ac);color:var(--ac)}
+.row.files .btn,.row.image .btn{margin:2px 4px 2px 0}
+#stage{position:relative;flex:1;min-width:0}#gl{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#hud{position:absolute;left:10px;top:8px;color:#fff8;font:11px monospace;pointer-events:none}
+#err{position:absolute;inset:20px;background:#300c;border:1px solid #f55;padding:12px;white-space:pre-wrap;font:12px monospace;overflow:auto}
+#bar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;background:#0009;padding:6px;border-radius:9px;backdrop-filter:blur(8px)}
+#modal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:9}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;width:420px;max-width:92vw}
+.card h3{margin:0 0 10px}.resrow{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}.resrow button{background:#1a1d2a;color:var(--tx);border:1px solid var(--line);border-radius:5px;padding:5px 8px;cursor:pointer}.resrow .on{border-color:var(--ac);color:var(--ac)}
+.wh{display:flex;gap:10px}.wh label{flex:1}.wh input{width:100%;margin-top:3px}
+.note{color:var(--dim);font-size:12px}.prog{height:6px;background:#1a1d2a;border-radius:3px;overflow:hidden;margin:8px 0}#progBar{height:100%;width:0;background:var(--ac)}
+.mrow{display:flex;gap:8px;justify-content:flex-end}
+@media(max-width:760px){#app{flex-direction:column-reverse}#side{width:100%;min-width:0;height:46%}#stage{height:54%;flex:none}}
+
+#credit{padding:7px 14px;border-top:1px solid var(--line);color:var(--dim);font-size:11px;text-align:center}
+#vmodal{position:fixed;inset:0;background:#000b;display:flex;align-items:center;justify-content:center;z-index:9}
+#vmodal .card{width:520px;max-height:94vh;overflow:auto}.hide{display:none!important}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-bottom:8px}.vgrid label{display:flex;flex-direction:column;font-size:12px;color:var(--dim)}
+.vgrid input,.vgrid select{margin-top:3px;background:#12141d;color:var(--tx);border:1px solid var(--line);border-radius:4px;padding:5px}.vgrid .chk{flex-direction:row;align-items:center;gap:6px;grid-column:1/-1}.vgrid .chk input{margin:0}
+#vPrev{height:140px;width:auto;max-width:100%;margin:6px auto!important;aspect-ratio:auto;background:#07080c;border-radius:6px;display:block;margin:6px 0}#vBar{height:100%;width:0;background:var(--ac)}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <aside id="side"><header><b>Gnarl Studio</b> <span id="ver"></span></header><div id="ui"></div><footer id="credit">Created with help from Claude AI</footer></aside>
+  <main id="stage">
+    <canvas id="gl"></canvas>
+    <div id="hud"></div>
+    <div id="err" class="hide"></div>
+    <div id="bar">
+      <button id="bPlay" title="Pause / play animation">⏸</button>
+      <button id="bCam" title="Reset camera">⌖ Camera</button>
+      <button id="bRand" title="Random seed + jitter">🎲 Reseed</button>
+      <button id="bSnap" title="Save viewer PNG">📷 Snapshot</button>
+      <button id="bRec" title="Record the live viewer to WebM">⏺ Record</button>
+      <button id="bVid" title="Render a deterministic video (MP4)">🎬 Video</button>
+      <button id="bHQ" class="primary">HQ export</button>
+    </div>
+  </main>
+</div>
+<div id="modal" class="hide"><div class="card">
+  <h3>HQ export</h3>
+  <div class="resrow" id="resBtns"></div>
+  <div class="wh"><label>Width <input id="hqW" type="number" min="64" max="8192" step="1"></label><label>Height <input id="hqH" type="number" min="64" max="8192" step="1"></label></div>
+  <p class="note" id="hqNote"></p>
+  <div class="prog"><div id="progBar"></div></div>
+  <div class="mrow"><button id="hqGo" class="primary">Render PNG</button><button id="hqCancel">Close</button></div>
+</div></div>
+<div id="vmodal" class="hide"><div class="card">
+  <h3>Video export</h3>
+  <div class="resrow" id="vRes"></div>
+  <div class="vgrid" id="vForm"></div>
+  <canvas id="vPrev" width="320" height="180"></canvas>
+  <p class="note" id="vNote"></p>
+  <div class="prog"><div id="vBar"></div></div>
+  <div class="mrow"><button id="vGo" class="primary">Render video</button><button id="vCancel">Close</button></div>
+</div></div>
+<input type="file" id="fImg" accept="image/*" hidden>
+<input type="file" id="fJson" accept=".json,application/json" hidden>
+<script>
+(() => {
+  // engine/state.js
+  var VERSION = "1.4.3";
+  var DEFAULTS = Object.freeze({
+    // shape
+    fold: 0,
+    iters: 4,
+    scale: 1.4,
+    offx: 0.8,
+    offy: 0.8,
+    offz: 0.8,
+    rx: 0,
+    ry: 0,
+    rz: 0,
+    fx1: 3.5,
+    fy1: 3.5,
+    fx2: 2,
+    fy2: 2,
+    gmode: 1,
+    sym: 0,
+    plane: 0,
+    planedepth: 2,
+    mirror: 0,
+    seed: 0,
+    jitter: 0.6,
+    eyecell: 2,
+    eyedepth: 4,
+    eyespin: 1.5,
+    eyesq: 2.5,
+    scrtile: 2,
+    scrroll: 3,
+    scrwave: 1.2,
+    mpetals: 6,
+    mflat: 0.18,
+    meyeblend: 0.6,
+    spiral: 0.6,
+    twidth: 0.2,
+    warp: 0,
+    // march
+    steps: 128,
+    eps: 1e-3,
+    detail: 1,
+    stepscale: 0.9,
+    safe: 1,
+    // light
+    laz: 0.8,
+    lel: 1.2,
+    lint: 1.5,
+    l2az: 2.2,
+    l2el: 0.5,
+    l2int: 0.25,
+    fill: 0.12,
+    sky: 0.4,
+    rim: 0.15,
+    shadows: 1,
+    soft: 12,
+    ao: 0.6,
+    aor: 0.5,
+    orbitLight: 0,
+    lightFollow: 1,
+    fog: 0.08,
+    // material / colour
+    pal: 4,
+    ccyc: 2.5,
+    cshift: 0,
+    spec: 0.8,
+    rough: 0.4,
+    metal: 0,
+    sss: 0.2,
+    glow: 0.35,
+    c0: "#1b1b3a",
+    c1: "#c0392b",
+    c2: "#f39c12",
+    c3: "#fdf2c0",
+    bg0: "#02020a",
+    bg1: "#0a0a22",
+    // image
+    useimg: 0,
+    imgblend: 1,
+    imgscale: 1,
+    imgrow: 0.5,
+    // post
+    tonemap: 0,
+    exposure: 1,
+    contrast: 1,
+    sat: 1,
+    vig: 0,
+    grain: 0.2,
+    // animation
+    anim: 1,
+    animSpeed: 0.3,
+    autoRot: 0,
+    rotMode: 0,
+    rotRange: 0.6,
+    drift: 0,
+    driftSpeed: 0.15,
+    // camera
+    camTheta: 0.4,
+    camPhi: 0.35,
+    camDist: 4.5,
+    camFov: 1.05,
+    tx: 0,
+    ty: 0,
+    tz: 0,
+    ortho: 0,
+    orthoScale: 3,
+    // viewer / export
+    viewScale: 1,
+    viewAA: 16,
+    liveAA: 1,
+    hqW: 2560,
+    hqH: 1440,
+    hqSteps: 400,
+    hqAA: 2,
+    vidW: 1920,
+    vidH: 1080,
+    vidFps: 30,
+    vidDur: 8,
+    vidMode: 0,
+    vidLoop: 1,
+    vidSpeed: 1,
+    vidTurns: 1,
+    vidDolly: 1,
+    vidQ: 2,
+    vidAA: 2,
+    vidSteps: 200,
+    vidFmt: 0
+  });
+  function makeState(over = {}) {
+    return { ...DEFAULTS, ...over };
+  }
+  function followLight(e, S2) {
+    if (!S2.lightFollow) return e;
+    const d = e.camTheta - S2.camTheta;
+    e.laz = S2.laz - d;
+    e.l2az = S2.l2az - d;
+    return e;
+  }
+  function applyRot(e, S2, phase) {
+    const m = S2.rotMode || (S2.fold >= 6 ? 1 : 2);
+    if (m === 1) e.camTheta = S2.camTheta + S2.rotRange * Math.sin(phase);
+    else if (m === 3) e.rz = S2.rz + phase;
+    else e.camTheta = S2.camTheta + phase;
+    return e;
+  }
+  function effective(S2, t) {
+    const e = { ...S2, time: t };
+    if (S2.autoRot) applyRot(e, S2, t * 0.35);
+    if (S2.drift) {
+      const k = t * S2.driftSpeed * 6.28318 * 0.25, a = S2.drift;
+      const df = Math.min(1, Math.sqrt(4 / Math.pow(Math.max(S2.scale, 1), S2.iters)));
+      e.offx += 0.35 * a * df * Math.sin(k * 1 + 0.3);
+      e.offy += 0.35 * a * df * Math.sin(k * 1.3 + 1.7);
+      e.offz += 0.35 * a * df * Math.sin(k * 0.8 + 2.9);
+      e.fx1 += 0.5 * a * Math.sin(k * 0.7 + 0.9);
+      e.fy1 += 0.5 * a * Math.sin(k * 0.9 + 2.1);
+      e.fx2 += 0.3 * a * Math.sin(k * 1.1 + 4);
+      e.fy2 += 0.3 * a * Math.sin(k * 0.6 + 5.2);
+    }
+    return followLight(e, S2);
+  }
+  function camPos(e) {
+    const t = e.camTheta, p = e.camPhi, d = e.camDist;
+    return [d * Math.cos(p) * Math.sin(t) + e.tx, d * Math.sin(p) + e.ty, d * Math.cos(p) * Math.cos(t) + e.tz];
+  }
+  function serialize(S2) {
+    const o = {};
+    for (const k of Object.keys(DEFAULTS)) o[k] = S2[k];
+    return JSON.stringify({ app: "gnarl-studio", version: VERSION, state: o }, null, 1);
+  }
+  function deserialize(txt) {
+    const j = JSON.parse(txt);
+    const src = j.state || j;
+    const o = {};
+    for (const k of Object.keys(DEFAULTS)) if (k in src && typeof src[k] === typeof DEFAULTS[k]) o[k] = src[k];
+    return makeState(o);
+  }
+
+  // engine/uniforms.js
+  var FLOATS = [
+    "scale",
+    "offx",
+    "offy",
+    "offz",
+    "rx",
+    "ry",
+    "rz",
+    "fx1",
+    "fy1",
+    "fx2",
+    "fy2",
+    "planedepth",
+    "seed",
+    "jitter",
+    "eyecell",
+    "eyedepth",
+    "eyespin",
+    "eyesq",
+    "scrtile",
+    "scrroll",
+    "scrwave",
+    "mpetals",
+    "mflat",
+    "meyeblend",
+    "eps",
+    "detail",
+    "stepscale",
+    "laz",
+    "lel",
+    "lint",
+    "l2az",
+    "l2el",
+    "l2int",
+    "fill",
+    "sky",
+    "rim",
+    "soft",
+    "ao",
+    "aor",
+    "fog",
+    "ccyc",
+    "cshift",
+    "spec",
+    "rough",
+    "metal",
+    "sss",
+    "glow",
+    "imgblend",
+    "imgscale",
+    "imgrow",
+    "imgaspect",
+    "exposure",
+    "contrast",
+    "sat",
+    "vig",
+    "grain",
+    "camFov",
+    "orthoScale",
+    "safe",
+    "spiral",
+    "twidth",
+    "warp",
+    "time"
+  ];
+  var INTS = ["iters", "gmode", "sym", "mirror", "steps", "shadows", "orbitLight", "pal", "useimg", "tonemap", "anim", "ortho"];
+  var COLORS = ["c0", "c1", "c2", "c3", "bg0", "bg1"];
+  var hex3 = (h) => [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+  var lin3 = (h) => hex3(h).map((v) => Math.pow(v, 2.2));
+
+  // engine/variations/gnarly.js
+  var gnarly_default = { id: 0, name: "Gnarly", desc: "Nested cos/sin triaxial fold, 8 trig-nest modes. The original JWildfire gnarl engine.", glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time:0.0;
+  float fx1=u_fx1+0.3*sin(at*0.41), fy1=u_fy1+0.3*cos(at*0.37);
+  float fx2=u_fx2+0.2*sin(at*0.53), fy2=u_fy2+0.2*cos(at*0.29);
+  mat3 R=rX(u_rx)*rY(u_ry+at*0.07)*rZ(u_rz);
+  // Lipschitz bound of the warp: per-iteration stretch = |scale| + |off|*grad(w)
+  float Gm=(u_gmode==4)?2.0:((u_gmode==6)?6.0:1.0);
+  float G=(fx1+fx2*(1.0+fx1))*Gm;
+  float fac=abs(u_scale)+clamp(u_safe,0.0,1.0)*max(abs(u_offx),max(abs(u_offy),abs(u_offz)))*G*0.06;
+  vec3 z=pos; float dr=1.0,trap=1e9;
+  for(int i=0;i<20;i++){ if(i>=u_iters) break; z=R*z;
+    float wx,wy,wz;
+    if(u_gmode==1){ wx=cos(fx1*z.y+sin(fx2*(z.y+sin(fx1*z.z)))); wy=cos(fy1*z.x+sin(fy2*(z.x+sin(fy1*z.z)))); wz=cos(fx1*z.z+sin(fx2*(z.z+sin(fy1*z.x)))); }
+    else if(u_gmode==2){ wx=sin(fx1*z.y+sin(fx2*(z.y+cos(fx1*z.z)))); wy=sin(fy1*z.x+sin(fy2*(z.x+cos(fy1*z.z)))); wz=sin(fx1*z.z+sin(fx2*(z.z+cos(fy1*z.x)))); }
+    else if(u_gmode==3){ wx=cos(fx1*z.y+sin(fx2*(z.x+sin(fx1*z.z)))); wy=cos(fy1*z.x+sin(fy2*(z.y+sin(fy1*z.z)))); wz=cos(fx1*z.z+sin(fx2*(z.z+sin(fy1*z.y)))); }
+    else if(u_gmode==4){ float sq=fx2*(z.y+cos(fx1*z.z)); sq*=sq; wx=sin(fx1*z.y+sin(sq)); sq=fy2*(z.x+cos(fy1*z.z)); sq*=sq; wy=sin(fy1*z.x+sin(sq)); sq=fx2*(z.z+cos(fy1*z.x)); sq*=sq; wz=sin(fx1*z.z+sin(sq)); }
+    else if(u_gmode==5){ wx=cos(fx1*z.y+log(abs(fx2*(z.y+sin(fx1*z.z)))+1.0)); wy=cos(fy1*z.x+log(abs(fy2*(z.x+sin(fy1*z.z)))+1.0)); wz=cos(fx1*z.z+log(abs(fx2*(z.z+sin(fy1*z.x)))+1.0)); }
+    else if(u_gmode==6){ wx=cos(fx1*z.y+tan(clamp(fx2*(z.y+sin(fx1*z.z)),-1.5,1.5))); wy=cos(fy1*z.x+tan(clamp(fy2*(z.x+sin(fy1*z.z)),-1.5,1.5))); wz=cos(fx1*z.z+tan(clamp(fx2*(z.z+sin(fy1*z.x)),-1.5,1.5))); }
+    else if(u_gmode==7){ wx=sin(fx1*z.y+atan(fx2*z.z)); wy=cos(fy1*z.z+atan(fy2*z.x)); wz=sin(fx1*z.x+atan(fx2*z.y)); }
+    else { wx=sin(fx1*z.y)*cos(fx2*z.z); wy=sin(fy1*z.z)*cos(fy2*z.x); wz=sin(fx1*z.x)*cos(fx2*z.y); }
+    z=z*u_scale+u_off*vec3(wx,wy,wz); dr=dr*fac+1.0;
+    trap=min(trap,dot(z,z)); if(length(z)>10.0) break;
+  }
+  return vec2((length(z)-1.5)/max(abs(dr),0.001), trap);
+}` };
+
+  // engine/variations/sine.js
+  var sine_default = { id: 1, name: "Sine Warp", desc: "Recursive sin(sin(z)) iteration: flowing folds and tendrils.", glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.12:0.0;
+  mat3 R=rX(u_rx)*rY(u_ry+at*0.05)*rZ(u_rz);
+  float fac=abs(u_scale)*(1.0+clamp(u_safe,0.0,1.0)*(max(abs(u_fx1),abs(u_fy1))+max(abs(u_fx2),abs(u_fy2)))*0.5);
+  vec3 z=pos; float dr=1.0,trap=1e9;
+  for(int i=0;i<20;i++){ if(i>=u_iters) break; z=R*z;
+    z=sin(z*vec3(u_fx1,u_fy1,u_fx1)+sin(z.yzx*vec3(u_fx2,u_fy2,u_fx2)+at*0.18));
+    z=z*u_scale+u_off*0.45; dr=dr*fac+1.0;
+    trap=min(trap,length(z)); if(length(z)>6.0) break;
+  }
+  return vec2((length(z)-1.2)/max(abs(dr),0.001), trap);
+}` };
+
+  // engine/variations/fbm.js
+  var fbm_default = { id: 2, name: "FBM Warp", desc: "Stacked 3D value-noise displacement: cloud-like organic drift.", glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  mat3 R=rX(u_rx)*rY(u_ry+at*0.04)*rZ(u_rz);
+  float mf=max(abs(u_fx1),max(abs(u_fx2),abs(u_fy1)))*max(1.0,abs(u_fy2)*0.5);
+  float fac=abs(u_scale)*(1.0+clamp(u_safe,0.0,1.0)*0.6*max(abs(u_offx),max(abs(u_offy),abs(u_offz)))*mf);
+  vec3 z=pos; float dr=1.0,trap=1e9;
+  for(int i=0;i<20;i++){ if(i>=u_iters) break; z=R*z;
+    float f1=fbm3(z*u_fx1+vec3(at*0.1,0.0,0.0),4)-0.5;
+    float f2=fbm3(z*u_fx2+vec3(0.0,at*0.1,at*0.08),4)-0.5;
+    float f3=fbm3(z*u_fy1+vec3(0.0,0.0,at*0.09),4)-0.5;
+    z+=vec3(f1,f2,f3*(u_fy2*0.5))*u_off*0.6; z=z*u_scale;
+    dr=dr*fac+1.0; trap=min(trap,length(z)); if(length(z)>6.0) break;
+  }
+  return vec2((length(z)-1.2)/max(abs(dr),0.001), trap);
+}` };
+
+  // engine/variations/eye.js
+  var eye_default = { id: 3, name: "Eye Vortex", desc: "Radius-dependent squircle-Voronoi with a log-spiral swirl: interwoven concentric eyes.", glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.08:0.0;
+  float cellSz=u_eyecell;
+  vec2 p=pos.xy/cellSz;
+  float sqMin=1.7, sqMax=max(u_eyesq,2.0)+2.0;
+  float spinAmt=u_eyespin+sin(at*0.4)*0.5*float(u_anim);
+  float ringFreq=u_eyedepth;
+  if(u_mirror!=0) p=abs(mod(p,2.0)-1.0);
+  vec2 base=floor(p), nearestC=vec2(0.0); float nearestEuc=1e9;
+  for(int oy=-1;oy<=1;oy++){ for(int ox=-1;ox<=1;ox++){
+    vec2 c=base+vec2(float(ox),float(oy))+0.5; float d=length(p-c);
+    if(d<nearestEuc){ nearestEuc=d; nearestC=c; } } }
+  float ch=hs2(nearestC*7.31+3.7), ch3=hs2(nearestC*5.9+47.2);
+  float sizeJ=mix(1.0,0.75+ch*0.5,u_jitter), ringJ=mix(1.0,0.7+ch3*0.7,u_jitter);
+  vec2 q=(p-nearestC)/sizeJ;
+  float euc=length(q)+1e-5;
+  float sqExp=mix(sqMin,sqMax,smoothstep(0.0,0.62,euc));
+  float rm=pow(pow(abs(q.x),sqExp)+pow(abs(q.y),sqExp),1.0/sqExp);
+  float spin=spinAmt*(1.0-smoothstep(0.0,0.45,rm))*3.0+at*0.15;
+  float cs=cos(spin), sn=sin(spin);
+  vec2 rotQ=vec2(q.x*cs-q.y*sn,q.x*sn+q.y*cs);
+  float rf=ringFreq*ringJ;
+  float rings=abs(sin(rm*rf-at*0.3));
+  float zWave=sin(pos.z*u_fx1+rm*u_fx2+at*0.15)*0.35;
+  mat3 R=rX(u_rx)*rY(u_ry+at*0.05)*rZ(u_rz);
+  vec3 z=vec3(rotQ*cellSz,pos.z+zWave); float dr=1.0,trap=1e9;
+  for(int i=0;i<20;i++){ if(i>=u_iters) break; z=R*z;
+    float wx=cos(u_fy1*z.y+sin(u_fy2*(z.y+sin(u_fy1*z.z))));
+    float wy=cos(u_fx1*z.x+sin(u_fx2*(z.x+sin(u_fx1*z.z))));
+    float wz=sin(u_fy1*z.z+cos(u_fx2*z.x));
+    z=z*u_scale*0.55+u_off*0.35*vec3(wx,wy,wz);
+    dr=dr*abs(u_scale*0.55)+1.0;
+    trap=min(trap,rings+length(z)*0.15);
+    if(length(z)>8.0) break;
+  }
+  float d=(length(z)-1.0)/max(abs(dr),0.001);
+  d+=0.015*sin(rm*rf*2.0*cellSz-at*0.4);
+  // stretch bound: swirl shear + z-wave gradient + ring carving
+  g_lip=sqrt(1.0+pow(2.25*spinAmt,2.0)) + 0.35*(abs(u_fx1)+abs(u_fx2)/cellSz) + 0.03*rf;
+  return vec2(d,trap);
+}` };
+
+  // engine/variations/scroll.js
+  var scroll_default = { id: 4, name: "Scroll Tile", desc: "Tiling rolled spiral surfaces: snail-scroll forms across the plane. Mirror makes it seamless.", glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.09:0.0;
+  float tile=u_scrtile; vec3 p=pos;
+  vec2 id2=floor(p.xy/tile+0.5);
+  vec2 local=p.xy-id2*tile;
+  if(u_mirror!=0){ local=abs(local)-(tile*0.5); local=abs(local); }
+  else { float flp=(mod(id2.x+id2.y,2.0)<0.5)?1.0:-1.0; local*=flp; }
+  float r=length(local), theta=atan(local.y,local.x);
+  float roll=u_scrroll+sin(at*0.3)*0.8*float(u_anim);
+  float sT=theta+roll*log(max(r,0.01));
+  vec2 sc=r*vec2(cos(sT),sin(sT));
+  float zSurf=sin(r*u_fx1*2.0+sT*u_fy1*0.5+at*0.2)*u_scrwave+sin(r*u_fx2*3.0-at*0.15)*u_scrwave*0.4;
+  vec3 z=vec3(sc,p.z+zSurf*0.3);
+  mat3 R=rX(u_rx)*rY(u_ry+at*0.06)*rZ(u_rz);
+  float dr=1.0,trap=1e9;
+  for(int i=0;i<20;i++){ if(i>=u_iters) break; z=R*z;
+    float wx=cos(u_fx1*z.y+sin(u_fx2*(z.y+sin(u_fx1*z.z))));
+    float wy=cos(u_fy1*z.x+sin(u_fy2*(z.x+sin(u_fy1*z.z))));
+    float wz=sin(u_fx1*z.z+cos(u_fy2*z.x));
+    z=z*u_scale*0.5+u_off*0.3*vec3(wx,wy,wz);
+    dr=dr*abs(u_scale*0.5)+1.0;
+    trap=min(trap,r*0.4+length(z)*0.1);
+    if(length(z)>8.0) break;
+  }
+  float d=(length(z)-1.0)/max(abs(dr),0.001);
+  d+=0.02*sin(sT*4.0+r*u_fx2*2.0-at*0.3);
+  float rr=max(r,0.15);
+  g_lip=sqrt(1.0+roll*roll) + 0.3*u_scrwave*(2.0*abs(u_fx1)+1.2*abs(u_fx2)+0.5*abs(u_fy1)*sqrt(1.0+roll*roll)/rr) + 0.02*(4.0*abs(roll)/rr+2.0*abs(u_fx2));
+  return vec2(d,trap);
+}` };
+
+  // engine/variations/mandala.js
+  var mandala_default = { id: 5, name: "Mandala Relief", desc: "Kaleidoscope fold + bounded height-field + jittered squircle eye lobes: flat carved-plaque mandalas.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  float petals=max(u_mpetals,3.0);
+  mat3 Rpre=rX(u_rx)*rY(u_ry)*rZ(u_rz);
+  vec3 pr=Rpre*pos;
+  float r=length(pr.xy);
+  float ang=atan(pr.y,pr.x)+at*0.05;
+  float wedge=6.28318/petals, hw=wedge*0.5;
+  ang=abs(mod(ang+hw,wedge)-hw);
+  vec2 fXY=r*vec2(cos(ang),sin(ang));
+  float cellSz=max(u_eyecell,0.3)/max(u_scale,0.1);
+  vec2 gp=fXY/cellSz;
+  gp.x-=1.4+u_offx; gp.y+=u_offy*0.5;
+  if(u_mirror!=0) gp=abs(mod(gp,2.0)-1.0);
+  vec2 base=floor(gp), nearestC=vec2(0.0); float nearestEuc=1e9;
+  for(int oy=-1;oy<=1;oy++){ for(int ox=-1;ox<=1;ox++){
+    vec2 c=base+vec2(float(ox),float(oy))+0.5; float d=length(gp-c);
+    if(d<nearestEuc){ nearestEuc=d; nearestC=c; } } }
+  vec2 q=gp-nearestC;
+  float ch=hs2(nearestC*7.31+3.7), ch2=hs2(nearestC*13.1+91.3), ch3=hs2(nearestC*5.9+47.2);
+  float sizeJ=mix(1.0,0.65+ch*0.7,u_jitter);
+  float shapeJ=mix(0.0,ch2*1.8,u_jitter);
+  float ringJ=mix(1.0,0.6+ch3*0.9,u_jitter);
+  float spinJ=(ch-0.5)*2.0*u_jitter;
+  vec2 qj=q/sizeJ;
+  float euc=length(qj)+1e-5;
+  float sqExp=mix(1.7+shapeJ,max(u_eyesq,2.0)+2.0+shapeJ,smoothstep(0.0,0.62,euc));
+  float rm=pow(pow(abs(qj.x),sqExp)+pow(abs(qj.y),sqExp),1.0/sqExp);
+  float spinAmt=(u_eyespin+sin(at*0.4)*0.3*float(u_anim))*(1.0+spinJ*0.6);
+  float spin=spinAmt*(1.0-smoothstep(0.0,0.45,rm))*2.0*clamp(u_meyeblend,0.0,1.0)+at*0.1;
+  float cs=cos(spin), sn=sin(spin);
+  vec2 rotQ=vec2(qj.x*cs-qj.y*sn,qj.x*sn+qj.y*cs);
+  float rings=abs(sin(rm*u_eyedepth*ringJ-at*0.3));
+  float fx1=u_fx1+0.3*sin(at*0.41), fy1=u_fy1+0.3*cos(at*0.37);
+  float fx2=u_fx2+0.2*sin(at*0.53), fy2=u_fy2+0.2*cos(at*0.29);
+  vec2 vz=rotQ*cellSz; float vein=0.0, vamp=0.5;
+  for(int i=0;i<6;i++){ if(i>=u_iters) break;
+    float wx=cos(fx1*vz.y+sin(fx2*vz.x)), wy=cos(fy1*vz.x+sin(fy2*vz.y));
+    vz=vz*1.3+vec2(wx,wy)*0.25; vein+=vamp*sin(vz.x*1.7+vz.y*1.3); vamp*=0.55; }
+  vein*=0.5;
+  float ringH=(1.0-rings)*0.5;
+  float centreBoost=1.0+1.8*exp(-r*0.55);
+  float height=(ringH*clamp(u_meyeblend,0.0,1.0)+vein*0.18*(1.0+u_offz*0.5))*u_mflat*centreBoost;
+  float slab=mix(0.02,0.22,clamp(u_mflat,0.0,1.0))*sizeJ;
+  float d=abs(pr.z-height)-slab;
+  float gh=u_mflat*centreBoost*(0.75*u_eyedepth/(cellSz*0.65)+0.18*(1.0+u_offz*0.5)*3.0);
+  g_lip=sqrt(1.0+gh*gh);
+  float trap=mix(dot(vz,vz)*0.05,rings,clamp(u_meyeblend,0.0,1.0));
+  return vec2(d,trap);
+}` };
+
+  // engine/variations/spiral.js
+  var spiral_default = { id: 6, name: "Log-Spiral Eyes", desc: "Log-polar lattice of squircle eyes: cells grow outward along interwoven spiral arms, like a sunflower of eyes. Relief height-field.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  float r=max(length(pr.xy),1e-3);
+  float th=atan(pr.y,pr.x+1e-6)+at*0.05;
+  float N=max(floor(u_mpetals+0.5),3.0), s=N/6.28318;
+  float u=log(r/max(u_eyecell,0.2))*s;
+  float v=th*s+u_spiral*u;
+  vec2 gp=vec2(u,v), id=floor(gp), q=fract(gp)-0.5;
+  id.y=mod(id.y,N);                       // seam-free: the angular cut shifts v by exactly N cells
+  float ch=hs2(id*7.31+3.7), ch2=hs2(id*13.1+91.3), ch3=hs2(id*5.9+47.2);
+  float sizeJ=mix(1.0,0.7+ch*0.6,u_jitter), shapeJ=mix(0.0,ch2*1.6,u_jitter), ringJ=mix(1.0,0.6+ch3*0.9,u_jitter);
+  q/=sizeJ;
+  float euc=length(q)+1e-5;
+  float e=mix(1.7+shapeJ,max(u_eyesq,2.0)+2.0+shapeJ,smoothstep(0.0,0.62,euc));
+  float rm=pow(pow(abs(q.x),e)+pow(abs(q.y),e),1.0/e);
+  float spinAmt=(u_eyespin+sin(at*0.4)*0.3*float(u_anim))*(1.0+(ch-0.5)*u_jitter);
+  float spin=spinAmt*(1.0-smoothstep(0.0,0.45,rm))*2.0*clamp(u_meyeblend,0.0,1.0);
+  float cs=cos(spin), sn=sin(spin);
+  vec2 rq=vec2(q.x*cs-q.y*sn,q.x*sn+q.y*cs);
+  float rings=abs(sin(rm*u_eyedepth*ringJ-at*0.3));
+  float fade=smoothstep(0.03,0.3,r);
+  float boost=1.0+1.0*exp(-r*0.5);
+  float height=u_mflat*(0.5*(1.0-rings)*clamp(u_meyeblend,0.0,1.0)+0.12*sin(rq.x*9.0+rq.y*7.0))*fade*boost+u_mflat*0.8*(1.0-fade);
+  float gh=u_mflat*(0.75*u_eyedepth+1.5)*1.5*s/max(r,0.25)*(1.0+0.5*abs(spinAmt));
+  return reliefOut(pr,height,sizeJ,rings+ch*0.25,gh);
+}` };
+
+  // engine/variations/honeycomb.js
+  var honeycomb_default = { id: 7, name: "Honeycomb Eyes", desc: "Hexagonal lattice of domed, ringed eyes with per-cell randomness. Squareness morphs round to hex. Relief height-field.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  float cell=max(u_eyecell,0.3);
+  vec2 p=pr.xy/cell;
+  const vec2 hs=vec2(1.0,1.7320508);
+  // triangular lattice = two interleaved rectangular lattices (integer + half-integer); nearest centre wins
+  vec2 ia=floor(p/hs+0.5), ib=floor(p/hs)+0.5;
+  vec2 qA=p-ia*hs, qB=p-ib*hs;
+  vec2 q, id;
+  if(dot(qA,qA)<dot(qB,qB)){ q=qA; id=ia; } else { q=qB; id=ib; }
+  float ch=hs2(id*7.31+3.7), ch3=hs2(id*5.9+47.2);
+  float sizeJ=mix(1.0,0.7+ch*0.6,u_jitter), ringJ=mix(1.0,0.6+ch3*0.9,u_jitter);
+  q/=sizeJ;
+  float spinAmt=floor(u_eyespin*(1.0+(ch-0.5)*u_jitter)+0.5);   // whole number of spiral arms per cell => no angular seam
+  float qa=atan(q.y,q.x+1e-6);
+  vec2 aq=abs(q);
+  float hexd=max(dot(aq,vec2(0.5,0.866025)),aq.x);
+  float rm=mix(length(q),hexd,clamp((u_eyesq-1.0)/5.0,0.0,1.0))*2.0;
+  // spiral arms: ring phase advances with angle (integer arm count keeps the angular wrap seamless)
+  float rings=abs(sin(rm*u_eyedepth*ringJ+spinAmt*qa-at*0.3));
+  float dome=pow(clamp(1.0-rm,0.0,1.0),2.0);
+  float height=u_mflat*(0.5*(1.0-rings)*clamp(u_meyeblend,0.0,1.0)+0.6*dome);
+  float gh=u_mflat*(0.75*u_eyedepth+1.2)*3.4/cell*(1.0+0.7*abs(spinAmt));
+  return reliefOut(pr,height,sizeJ,rings+ch*0.3,gh);
+}` };
+
+  // engine/variations/truchet.js
+  var truchet_default = { id: 8, name: "Truchet Weave", desc: "Randomly flipped quarter-arc tiles form endless interwoven ribbons with ridged edges and an over/under lift. Relief height-field.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  float T=max(u_eyecell,0.3);
+  vec2 p=pr.xy/T;
+  vec2 id=floor(p), f=fract(p)-0.5;
+  float hsh=hs2(id*7.7+1.3);
+  if(hsh>0.5) f.x=-f.x;
+  vec2 c1=vec2(0.5), c2=vec2(-0.5);
+  float d1=length(f-c1)-0.5, d2=length(f-c2)-0.5;
+  // smooth-min of the two arc distances: no hard crease where the arcs meet
+  float k=0.08, hh=clamp(0.5+0.5*(abs(d2)-abs(d1))/k,0.0,1.0);
+  float ad=mix(abs(d2),abs(d1),hh)-k*hh*(1.0-hh);
+  float w=max(u_twidth,0.04);
+  float ribbon=1.0-smoothstep(0.0,w,ad);
+  float ridge=0.7+0.3*cos(ad*u_eyedepth*6.0-at*0.5);
+  float par=mod(id.x+id.y,2.0);
+  float mask=clamp(1.0-2.0*max(abs(f.x),abs(f.y)),0.0,1.0);   // 0 at tile edges: no seams
+  float height=u_mflat*ribbon*(ridge+0.45*par*mask*clamp(u_meyeblend,0.0,1.0));
+  float trap=ad*3.0+0.25*sin(p.x*1.3+p.y*0.7);
+  float gh=u_mflat*(2.0/w+2.0*u_eyedepth+1.8)/T;
+  return reliefOut(pr,height,1.0,trap,gh);
+}` };
+
+  // engine/variations/ripple.js
+  var ripple_default = { id: 9, name: "Ripple Interference", desc: "Circular (optionally spiral) waves from several sources interfere into moire eyes and ridged lattices. Sources = Petals. Relief height-field.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  vec2 p=pr.xy;
+  float N=floor(clamp(u_mpetals,2.0,24.0)+0.5), Rr=u_eyecell*0.8, F=u_eyedepth*3.0;
+  float arms=floor(u_eyespin+0.5);   // whole number of spiral arms => no angular seam
+  float S=0.0, dm=1e9;
+  for(int k=0;k<24;k++){
+    if(float(k)>=N) break;
+    float a=6.28318*float(k)/N+at*0.1+(hs2(vec2(float(k),1.0))-0.5)*u_jitter*2.0;
+    float rr=Rr*(1.0+(hs2(vec2(float(k),2.0))-0.5)*u_jitter*0.8);
+    vec2 dv=p-rr*vec2(cos(a),sin(a));
+    float d=length(dv);
+    S+=cos(F*d+arms*atan(dv.y,dv.x+1e-6)-at*0.8);
+    dm=min(dm,d);
+  }
+  S/=N;
+  float height=u_mflat*0.7*(1.0-abs(S));
+  float gh=u_mflat*0.7*(F+abs(arms)/0.3);
+  return reliefOut(pr,height,1.0,S*0.5+0.5+dm*0.15,gh);
+}` };
+
+  // engine/variations/chladni.js
+  var chladni_default = { id: 10, name: "Chladni Plate", desc: "Standing-wave modes of a vibrating plate: cos(m x)cos(n y) - cos(n x)cos(m y). Petals = m, Ring frequency = n. Blend turns the surface into sand-line ridges on the nodal lines. Animation morphs between modes.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  float cell=max(u_eyecell,0.4);
+  vec2 p=pr.xy/cell;
+  float m=floor(clamp(u_mpetals,1.0,24.0)+0.5), n=floor(clamp(u_eyedepth,1.0,24.0)+0.5);
+  if(n==m) n+=1.0;
+  float a=3.14159265*m, b=3.14159265*n;
+  float w=-cos(at*0.4);                                  // -1 at rest (classic minus form), morphs with time
+  float S=0.5*(cos(a*p.x)*cos(b*p.y)+w*cos(b*p.x)*cos(a*p.y));
+  float bl=clamp(u_meyeblend,0.0,1.0);
+  float nodal=1.0-smoothstep(0.0,0.3,abs(S));            // sand collects on the nodal lines
+  float height=u_mflat*(0.8*S*(1.0-bl)+0.8*nodal*bl);
+  float K=0.8*(1.0-bl)+0.8*bl*(1.5/0.3);
+  float gh=u_mflat*K*3.14159265*(m+n)/cell;
+  return reliefOut(pr,height,1.0,S*0.5+0.5+(1.0-nodal)*0.2,gh);
+}` };
+
+  // engine/variations/quasi.js
+  var quasi_default = { id: 11, name: "Quasicrystal Waves", desc: "Sum of plane waves at evenly spaced angles (Petals = wave count; 5, 7, 8 give quasicrystal tilings). Squareness = terrace levels, Blend = terracing amount.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  vec2 p=pr.xy;
+  float N=floor(clamp(u_mpetals,2.0,24.0)+0.5);
+  float F=u_eyedepth*2.4/max(u_eyecell,0.4);
+  float S=0.0;
+  for(int k=0;k<24;k++){
+    if(float(k)>=N) break;
+    float ang=3.14159265*float(k)/N;
+    S+=cos(F*dot(p,vec2(cos(ang),sin(ang)))+at*(2.0+0.7*float(k)));
+  }
+  S/=N;
+  float hh=0.5+0.5*S;
+  float L=max(floor(u_eyesq+0.5),1.0)+1.0;
+  float s=hh*L;
+  float q=(floor(s)+smoothstep(0.3,0.7,fract(s)))/L;       // soft terraces
+  float bl=clamp(u_meyeblend,0.0,1.0);
+  float height=u_mflat*mix(hh,q,bl);
+  float gh=u_mflat*0.5*F*(1.0+2.75*bl);
+  return reliefOut(pr,height,1.0,hh+bl*floor(s)*0.07,gh);
+}` };
+
+  // engine/variations/drum.js
+  var drum_default = { id: 12, name: "Drum Modes", desc: "Vibrating circular membrane: cos(F r) cos(m theta) with radial decay. Petals = angular modes m, Ring frequency = radial rings. Spiral twist blends standing modes into travelling spiral waves; Blend = nodal-line ridges.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  float cell=max(u_eyecell,0.4);
+  vec2 p=pr.xy/cell;
+  float r=length(p)+1e-4;
+  float th=atan(p.y,p.x+1e-6);
+  float m=floor(clamp(u_mpetals,1.0,24.0)+0.5);
+  float F=u_eyedepth*1.2;
+  float env=smoothstep(0.0,0.4,r)/sqrt(1.0+r*1.2);
+  float standing=cos(F*r-at*0.8)*cos(m*th);
+  float sg=(u_spiral>=0.0)?1.0:-1.0;
+  float travel=cos(F*r+sg*m*th-at*0.8);
+  float S=env*mix(standing,travel,clamp(abs(u_spiral)/3.0,0.0,1.0));
+  float bl=clamp(u_meyeblend,0.0,1.0);
+  float nodal=1.0-smoothstep(0.0,0.3,abs(S));
+  float height=u_mflat*(0.9*S*(1.0-bl)+0.8*nodal*bl);
+  float K=0.9*(1.0-bl)+0.8*bl*(1.5/0.3);
+  float gh=u_mflat*K*(F+m/max(r,0.3)+1.0)/cell;
+  return reliefOut(pr,height,1.0,S*1.6+0.5+(1.0-nodal)*0.2,gh);
+}` };
+
+  // engine/variations/drops.js
+  var drops_default = { id: 13, name: "Raindrops", desc: "A pond of random ripple sources, one per cell, with decaying circular waves that expand when animated. Cell randomness moves the drops, Blend sets how far each ring travels, Seed changes the rain.", ownPlane: true, glsl: `
+vec2 de_var(vec3 pos){
+  float at=ANIM?u_time*0.07:0.0;
+  vec3 pr=(rX(u_rx)*rY(u_ry)*rZ(u_rz))*pos;
+  pr.xy=warpDomain(pr.xy);
+  float cell=max(u_eyecell,0.4);
+  vec2 p=pr.xy/cell;
+  vec2 base=floor(p);
+  float F=u_eyedepth*3.0;
+  float decay=(0.6+clamp(u_meyeblend,0.0,1.0)*2.4)/cell;
+  float S=0.0, dmin=1e9;
+  for(int oy=-1;oy<=1;oy++){ for(int ox=-1;ox<=1;ox++){
+    vec2 c=base+vec2(float(ox),float(oy));
+    float h1=hs2(c*7.31+3.7), h2_=hs2(c*13.1+91.3), h3=hs2(c*5.9+47.2);
+    vec2 ctr=c+0.5+(vec2(h1,h2_)-0.5)*0.6*clamp(u_jitter,0.0,1.5);
+    float dc=length(p-ctr), d=dc*cell;
+    float win=1.0-smoothstep(0.45,1.0,dc);       // zero before the 3x3 search window ends => no cell-border seams
+    S+=win*(0.5+0.5*h3)*cos(F*d-at*3.0+h3*6.28318)*exp(-d*decay);
+    dmin=min(dmin,d);
+  } }
+  float height=u_mflat*0.6*S/(1.0+0.5*abs(S));
+  float gh=u_mflat*0.6*(F+decay+2.8/cell)*2.0;
+  return reliefOut(pr,height,1.0,0.5+0.5*S/(1.0+abs(S))+dmin*0.1,gh);
+}` };
+
+  // engine/glsl.js
+  var VARIATIONS = [gnarly_default, sine_default, fbm_default, eye_default, scroll_default, mandala_default, spiral_default, honeycomb_default, truchet_default, ripple_default, chladni_default, quasi_default, drum_default, drops_default];
+  var VS = "attribute vec2 a_pos; void main(){ gl_Position=vec4(a_pos,0.0,1.0); }";
+  var HEADER = () => `precision highp float;
+uniform vec2 u_res, u_origin, u_jit;
+uniform vec3 u_cam_pos, u_cam_target, u_c0, u_c1, u_c2, u_c3, u_bg0, u_bg1;
+${FLOATS.map((k) => `uniform float u_${k};`).join("\n")}
+${INTS.map((k) => `uniform int u_${k};`).join("\n")}
+uniform sampler2D u_tex;
+#define u_off vec3(u_offx,u_offy,u_offz)
+#define ANIM (u_anim!=0)
+`;
+  var COMMON = `
+float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+float hs2(vec2 p){ return h2(p+vec2(u_seed*17.13,u_seed*5.71)); }
+float h3(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5); }
+vec3 cospal(float t,vec3 a,vec3 b,vec3 c,vec3 d){ return a+b*cos(6.28318*(c*t+d)); }
+mat3 rX(float a){ float c=cos(a),s=sin(a); return mat3(1,0,0,0,c,-s,0,s,c); }
+mat3 rY(float a){ float c=cos(a),s=sin(a); return mat3(c,0,s,0,1,0,-s,0,c); }
+mat3 rZ(float a){ float c=cos(a),s=sin(a); return mat3(c,-s,0,s,c,0,0,0,1); }
+float vnoise(vec3 p){
+  vec3 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
+  float a=h3(i),b=h3(i+vec3(1,0,0)),c=h3(i+vec3(0,1,0)),d=h3(i+vec3(1,1,0));
+  float e=h3(i+vec3(0,0,1)),ff=h3(i+vec3(1,0,1)),g=h3(i+vec3(0,1,1)),hh=h3(i+vec3(1,1,1));
+  return mix(mix(mix(a,b,f.x),mix(c,d,f.x),f.y),mix(mix(e,ff,f.x),mix(g,hh,f.x),f.y),f.z);
+}
+float fbm3(vec3 p,int oct){ float v=0.0,amp=0.5; for(int i=0;i<8;i++){ if(i>=oct) break; v+=amp*vnoise(p); p*=2.0; amp*=0.5; } return v; }
+`;
+  var PREP = `
+float g_st=1.0;    // stretch of the relief domain mapping (zoom * warp), folded into the Lipschitz bound
+// Shared domain for relief variations: pan (Offset X/Y) -> zoom (Scale) -> gnarl-style warp (Warp amount, Iterations, Freq X1..Y2)
+vec2 warpDomain(vec2 p){
+  float at=ANIM?u_time*0.05:0.0;
+  float zoom=max(u_scale*0.5,0.05);
+  p=(p+vec2(u_offx-1.0,u_offy-1.0)*0.5)*zoom;
+  g_st=max(zoom,1.0);
+  if(u_warp>0.0){
+    float amp=u_warp*0.25;
+    for(int i=0;i<6;i++){
+      if(i>=u_iters) break;
+      vec2 w=vec2(cos(u_fx1*p.y+sin(u_fx2*(p.y+at))), cos(u_fy1*p.x+sin(u_fy2*(p.x+at))));
+      p+=amp*w;
+      g_st*=1.0+amp*max(abs(u_fx1)+abs(u_fx2),abs(u_fy1)+abs(u_fy2));
+      amp*=0.55;
+    }
+  }
+  return p;
+}
+float g_lip=1.0;   // per-variation Lipschitz (stretch) bound, set inside de_var
+// shared relief output: thin slab around a bounded height h(x,y) in the plate's own (rotated) frame -- pass the ROTATED point so tilting never makes h depend on depth; gradH bounds |grad h| so the slab SDF stays Lipschitz-safe
+vec2 reliefOut(vec3 pr,float h,float sizeJ,float trap,float gradH){
+  float gg=gradH*g_st;
+  g_lip=sqrt(1.0+gg*gg);
+  return vec2(abs(pr.z-h)-mix(0.02,0.22,clamp(u_mflat,0.0,1.0))*sizeJ,trap);
+}
+float lipEff(float l){ return mix(1.0,max(1.0,l),clamp(u_safe,0.0,1.0)); }
+vec3 prep(vec3 p){
+  if(u_sym>=2){
+    float n=float(u_sym), r=length(p.xy), a=atan(p.y,p.x), w=6.28318/n;
+    a=abs(mod(a+w*0.5,w)-w*0.5);
+    p.xy=r*vec2(cos(a),sin(a));
+  }
+  return p;
+}`;
+  function mapFn(v, plane) {
+    const body = plane && !v.ownPlane ? `vec2 r=de_var(vec3(pos.xy,0.0));
+  float trapH=clamp(r.y,0.0,8.0);
+  float height=sin(trapH*u_planedepth)*u_mflat*0.4;
+  float slab=mix(0.015,0.18,clamp(u_mflat,0.0,1.0));
+  r.x=abs(pos.z-height)-slab;
+  float gh=u_mflat*0.4*u_planedepth*2.0; g_lip=max(g_lip,sqrt(1.0+gh*gh));` : `vec2 r=de_var(pos);`;
+    return `vec2 map(vec3 pos){
+  pos=prep(pos);
+  ${body}
+  r.x*=u_stepscale/lipEff(g_lip); return r;
+}`;
+  }
+  var SHADE = `
+float g_pa=0.0;
+float fp(float t){ return u_ortho!=0 ? u_orthoScale/u_res.y : t*g_pa; }
+
+vec3 nrm(vec3 p,float e){
+  vec2 k=vec2(1.0,-1.0);
+  return normalize(k.xyy*map(p+k.xyy*e).x+k.yyx*map(p+k.yyx*e).x+k.yxy*map(p+k.yxy*e).x+k.xxx*map(p+k.xxx*e).x);
+}
+float shdw(vec3 ro,vec3 rd,float mn,float mx,float k){
+  float res=1.0,t=mn,ph=1e10;
+  for(int i=0;i<64;i++){
+    if(t>=mx) break;
+    float h=map(ro+rd*t).x;
+    if(h<0.0004) return 0.0;
+    float y=h*h/(2.0*ph), dd=sqrt(max(h*h-y*y,0.0));
+    res=min(res,k*dd/max(1e-4,t-y)); ph=h; t+=clamp(h,0.004,0.35);
+  }
+  return clamp(res,0.0,1.0);
+}
+float calcAO(vec3 p,vec3 n){
+  float s=0.0,w=1.0;
+  for(int i=1;i<=5;i++){ float d=float(i)*u_aor*0.2; s+=w*(d-map(p+n*d).x); w*=0.5; }
+  return clamp(1.0-u_ao*s,0.0,1.0);
+}
+vec3 gradCustom(float t){
+  float k=abs(fract(t)*2.0-1.0)*3.0;
+  if(k<1.0) return mix(u_c0,u_c1,k);
+  if(k<2.0) return mix(u_c1,u_c2,k-1.0);
+  return mix(u_c2,u_c3,k-2.0);
+}
+vec3 palette(float t){
+  if(u_pal==0) return cospal(t,vec3(.5),vec3(.5),vec3(1),vec3(0,.33,.67));
+  if(u_pal==1) return cospal(t,vec3(.5),vec3(.5),vec3(2,1,0),vec3(.5,.2,.25));
+  if(u_pal==2) return cospal(t,vec3(0,.1,.3),vec3(.5),vec3(1),vec3(0,.1,.3));
+  if(u_pal==3) return cospal(t,vec3(.1,.5,.3),vec3(.2,.4,.2),vec3(2,1,1),vec3(0,.25,.25));
+  if(u_pal==4) return cospal(t,vec3(.15,.1,.05),vec3(.6,.5,.3),vec3(1,.7,.4),vec3(0,.15,.2));
+  if(u_pal==5) return cospal(t,vec3(.5),vec3(.5),vec3(1),vec3(.3,.2,.2));
+  if(u_pal==6) return cospal(t,vec3(.3,.05,0),vec3(.6,.4,.2),vec3(1,.8,.5),vec3(.05,.1,.15));
+  if(u_pal==7) return cospal(t,vec3(0,.2,.4),vec3(.5,.4,.3),vec3(.8,1,1.2),vec3(.1,.2,0));
+  if(u_pal==8) return cospal(t,vec3(.4,.1,.3),vec3(.4,.4,.2),vec3(1.5,1,.5),vec3(.3,0,.1));
+  return gradCustom(t);
+}
+// One material function used for both surface and glow, so image modes can never leak palette colour.
+// Textures are uploaded power-of-two with REPEAT wrap and Y pre-flipped at upload (no fract/flip hacks here).
+vec3 matCol(vec3 p,float trap){
+  float t=trap*u_ccyc+u_cshift;
+  vec3 col=palette(t);
+  if(u_useimg==1){
+    vec3 rc=texture2D(u_tex,vec2(t*0.5+0.5,u_imgrow)).rgb;
+    rc=pow(rc,vec3(2.2));
+    col=mix(col,rc,clamp(u_imgblend,0.0,1.0));
+  } else if(u_useimg==2){
+    vec2 uv=vec2(p.x*0.25*u_imgscale/u_imgaspect,p.y*0.25*u_imgscale)+0.5;
+    vec3 ic=pow(texture2D(u_tex,uv).rgb,vec3(2.2));
+    col=mix(col,ic,clamp(u_imgblend,0.0,1.0));
+  }
+  return col;
+}
+vec3 bgAt(vec3 rd){ return mix(u_bg0,u_bg1,smoothstep(-0.2,0.9,rd.y)); }
+vec3 tonemap(vec3 c){
+  if(u_tonemap==0) return c*(2.51*c+0.03)/(c*(2.43*c+0.59)+0.14);
+  if(u_tonemap==1){ c=max(vec3(0.0),c-0.004); return (c*(6.2*c+0.5))/(c*(6.2*c+1.7)+0.06); } // filmic (gamma baked in; undone below)
+  if(u_tonemap==2) return c/(1.0+c);
+  return clamp(c,0.0,1.0);
+}
+
+void main(){
+  vec2 fc=gl_FragCoord.xy+u_origin;
+  vec2 uv=(fc+u_jit-u_res*0.5)/u_res.y;
+  vec3 ro=u_cam_pos, ta=u_cam_target;
+  vec3 fw=normalize(ta-ro), rt=normalize(cross(fw,vec3(0,1,0))), up=cross(rt,fw);
+  float fl=1.0/tan(u_camFov*0.5);
+  g_pa=1.0/(fl*u_res.y);
+  vec3 rd;
+  if(u_ortho!=0){ ro+=(rt*uv.x+up*uv.y)*u_orthoScale; rd=fw; }
+  else rd=normalize(fw*fl+rt*uv.x+up*uv.y);
+
+  float la=(u_orbitLight!=0)?u_laz+u_time*0.28:u_laz;
+  vec3 ld=normalize(vec3(cos(la)*cos(u_lel),sin(u_lel),sin(la)*cos(u_lel)));
+  vec3 ld2=normalize(vec3(cos(u_l2az)*cos(u_l2el),sin(u_l2el),sin(u_l2az)*cos(u_l2el)));
+
+  float t=0.01, tmax=24.0, trap=0.0, thr=u_eps, dl=1e9, tl=0.0; bool hit=false;
+  for(int i=0;i<400;i++){
+    if(i>=u_steps) break;
+    vec2 res=map(ro+rd*t); float d=res.x;
+    thr=u_eps*0.25+fp(t)*0.5*u_detail;
+    dl=d; tl=res.y;
+    if(d<thr){ hit=true; trap=res.y; break; }
+    if(t>tmax) break;
+    t+=clamp(d,thr*0.5,0.6);
+  }
+  // ran out of steps right beside a surface: count it as a hit instead of punching a black hole
+  if(!hit && t<tmax && dl<thr*6.0){ hit=true; trap=tl; }
+  vec3 col;
+  if(hit){
+    vec3 p=ro+rd*t, n=nrm(p,max(thr,0.0004));
+    vec3 alb=matCol(p,trap);
+    float occ=calcAO(p,n);
+    float diff=max(0.0,dot(n,ld));
+    float sh=(u_shadows!=0)?shdw(p+n*thr*2.0,ld,0.01,6.0,u_soft):1.0;
+    float diff2=max(0.0,dot(n,ld2))*u_l2int;
+    vec3 h=normalize(ld-rd); float gp=2.0/(u_rough*u_rough+0.01)-2.0;
+    float sf=pow(max(0.0,dot(n,h)),gp)*u_spec;
+    vec3 specCol=mix(vec3(1.0,0.95,0.9),alb,u_metal);
+    float ndv=max(0.0,dot(n,-rd));
+    vec3 amb=mix(u_bg0*0.5,u_bg1*2.0+vec3(0.05),0.5+0.5*n.y)*u_sky;
+    float sss=pow(max(0.0,-dot(rd,n)),3.0)*u_sss;
+    float rimT=pow(1.0-ndv,3.0)*u_rim;
+    vec3 dcol=alb*(1.0-0.85*u_metal);
+    col=dcol*(diff*sh*u_lint*occ+diff2*occ+amb*occ*0.5+vec3(u_fill)*occ+sss)
+       +sf*sh*occ*specCol*u_lint
+       +rimT*occ*mix(vec3(1.0),alb,0.5);
+    col=mix(col,bgAt(rd),1.0-exp(-t*u_fog));
+  } else {
+    col=bgAt(rd);
+    col+=u_glow*0.04*vec3(.5,.3,.8)*pow(max(0.0,dot(rd,ld)),6.0);
+  }
+  float tg=clamp(t-0.1,0.01,tmax);
+  vec3 gp0=ro+rd*tg; vec2 g0=map(gp0);
+  col+=exp(-max(0.0,g0.x)*5.5)*u_glow*0.3*matCol(gp0,g0.y*0.5);
+
+  col*=u_exposure;
+  col=tonemap(col);
+  if(u_tonemap!=1) col=pow(clamp(col,0.0,1.0),vec3(0.4545));
+  col=clamp(col,0.0,1.0);
+  float lum=dot(col,vec3(0.299,0.587,0.114));
+  col=mix(vec3(lum),col,u_sat);
+  col=(col-0.5)*u_contrast+0.5;
+  vec2 vq=(fc/u_res)-0.5; vq.x*=u_res.x/u_res.y;
+  col*=1.0-u_vig*smoothstep(0.25,0.95,length(vq));
+  col+=(h2(floor(gl_FragCoord.xy+u_origin))-0.5)*u_grain*0.08;
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
+}`;
+  var cache = /* @__PURE__ */ new Map();
+  function buildFragment(fold, plane) {
+    const key = fold + ":" + (plane ? 1 : 0);
+    if (cache.has(key)) return cache.get(key);
+    const v = VARIATIONS[fold];
+    const src = HEADER() + COMMON + PREP + "\n" + v.glsl + "\n" + mapFn(v, plane) + SHADE;
+    cache.set(key, src);
+    return src;
+  }
+
+  // engine/renderer.js
+  function jitter(k) {
+    if (k === 0) return [0, 0];
+    const h = (i, b) => {
+      let f = 1, r = 0;
+      while (i > 0) {
+        f /= b;
+        r += f * (i % b);
+        i = Math.floor(i / b);
+      }
+      return r;
+    };
+    return [h(k, 2) - 0.5, h(k, 3) - 0.5];
+  }
+  var Renderer = class {
+    constructor(canvas2) {
+      this.canvas = canvas2;
+      const gl = this.gl = canvas2.getContext("webgl", { preserveDrawingBuffer: true, antialias: false });
+      if (!gl) throw new Error("WebGL not available");
+      this.programs = /* @__PURE__ */ new Map();
+      this.cur = null;
+      this.lost = false;
+      canvas2.addEventListener("webglcontextlost", (e) => {
+        e.preventDefault();
+        this.lost = true;
+      });
+      canvas2.addEventListener("webglcontextrestored", () => {
+        this.lost = false;
+        this.programs.clear();
+        this.cur = null;
+        this._init();
+        this.onRestored && this.onRestored();
+      });
+      this._init();
+    }
+    _init() {
+      const gl = this.gl;
+      this.vb = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+      this.tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255, 255, 255, 255]));
+      this.imgAspect = 1;
+      this.hasImage = false;
+      if (this.pendingImage) this.setImage(this.pendingImage);
+    }
+    maxDim() {
+      return Math.min(this.gl.getParameter(this.gl.MAX_RENDERBUFFER_SIZE), 8192);
+    }
+    compile(fold, plane) {
+      const key = fold + ":" + (plane ? 1 : 0);
+      if (this.programs.has(key)) return this.programs.get(key);
+      const gl = this.gl;
+      const mk = (type, src) => {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error("Shader compile (" + VARIATIONS[fold].name + (plane ? " plane" : "") + "): " + gl.getShaderInfoLog(sh));
+        return sh;
+      };
+      const prog = gl.createProgram();
+      gl.attachShader(prog, mk(gl.VERTEX_SHADER, VS));
+      gl.attachShader(prog, mk(gl.FRAGMENT_SHADER, buildFragment(fold, plane)));
+      gl.bindAttribLocation(prog, 0, "a_pos");
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error("Link: " + gl.getProgramInfoLog(prog));
+      const loc = {};
+      const names = [
+        "u_res",
+        "u_origin",
+        "u_jit",
+        "u_cam_pos",
+        "u_cam_target",
+        "u_tex",
+        ...FLOATS.map((k) => "u_" + k),
+        ...INTS.map((k) => "u_" + k),
+        ...COLORS.map((k) => "u_" + k)
+      ];
+      gl.useProgram(prog);
+      for (const n of names) loc[n] = gl.getUniformLocation(prog, n);
+      const p = { prog, loc };
+      this.programs.set(key, p);
+      return p;
+    }
+    setImage(img) {
+      if (this.lost) {
+        this.pendingImage = img;
+        return;
+      }
+      const gl = this.gl, N = 1024;
+      const c = document.createElement("canvas");
+      c.width = c.height = N;
+      const cx = c.getContext("2d");
+      cx.drawImage(img, 0, 0, N, N);
+      this.imgAspect = (img.naturalWidth || img.width) / (img.naturalHeight || img.height);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+      this.hasImage = true;
+      this.pendingImage = img;
+    }
+    // e: effective state. o: {W,H (full frame), x,y,w,h (tile), jx,jy (-0.5..0.5), steps}
+    renderTile(e, o) {
+      const gl = this.gl, cv = this.canvas;
+      const { W, H } = o, x = o.x || 0, y = o.y || 0, w = o.w || W, h = o.h || H;
+      if (cv.width !== w || cv.height !== h) {
+        cv.width = w;
+        cv.height = h;
+      }
+      gl.viewport(0, 0, w, h);
+      const { prog, loc } = this.compile(e.fold, e.plane);
+      if (this.cur !== prog) {
+        gl.useProgram(prog);
+        this.cur = prog;
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      gl.uniform2f(loc.u_res, W, H);
+      gl.uniform2f(loc.u_origin, x, y);
+      gl.uniform2f(loc.u_jit, o.jx || 0, o.jy || 0);
+      gl.uniform3f(loc.u_cam_pos, ...camPos(e));
+      gl.uniform3f(loc.u_cam_target, e.tx, e.ty, e.tz);
+      const ev = { ...e, imgaspect: this.imgAspect, steps: o.steps || e.steps };
+      for (const k of FLOATS) gl.uniform1f(loc["u_" + k], ev[k]);
+      for (const k of INTS) gl.uniform1i(loc["u_" + k], k === "useimg" ? this.hasImage ? ev.useimg : 0 : ev[k] | 0);
+      for (const k of COLORS) gl.uniform3f(loc["u_" + k], ...lin3(ev[k]));
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.uniform1i(loc.u_tex, 0);
+      if (o.blend !== void 0 && o.blend < 1) {
+        gl.enable(gl.BLEND);
+        gl.blendColor(0, 0, 0, o.blend);
+        gl.blendFunc(gl.CONSTANT_ALPHA, gl.ONE_MINUS_CONSTANT_ALPHA);
+      } else gl.disable(gl.BLEND);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      gl.disable(gl.BLEND);
+    }
+    // Full converged frame: sample 0 opaque, samples 1..n-1 blended with 1/(k+1). Same jitter sequence everywhere.
+    renderRefined(e, W, H, n, o = {}) {
+      for (let k = 0; k < n; k++) {
+        const j = jitter(k);
+        this.renderTile(e, { W, H, ...o, jx: j[0], jy: j[1], blend: k ? 1 / (k + 1) : 1 });
+      }
+    }
+    // Viewer / snapshot path: full frame, one tile.
+    renderScene(e, W, H, o = {}) {
+      this.renderTile(e, { W, H, ...o });
+    }
+    readTile(w, h) {
+      const b = new Uint8Array(w * h * 4);
+      this.gl.readPixels(0, 0, w, h, this.gl.RGBA, this.gl.UNSIGNED_BYTE, b);
+      return b;
+    }
+  };
+
+  // engine/presets.js
+  var G = { iters: 8, scale: 2, offx: 1, offy: 1, offz: 1, fx1: 3.5, fy1: 3.5, fx2: 2, fy2: 2, gmode: 1 };
+  var TOP = { camTheta: 0, camPhi: 0, camDist: 3.2 };
+  var SOLID = { iters: 3, scale: 1.4, offx: 1, offy: 1, offz: 1 };
+  var PRESETS = [
+    { n: "Gnarly Gold", s: { ...G, ...SOLID, fold: 0, pal: 4, ccyc: 2.5, glow: 0.35, camDist: 4.5, camTheta: 0.4, camPhi: 0.35 } },
+    { n: "Gnarly Plane Gold", s: { ...G, fold: 0, plane: 1, planedepth: 2.5, pal: 4, ccyc: 2.5, glow: 0.5, ...TOP, camDist: 3.5 } },
+    { n: "Gnarly Tangent", s: { ...G, ...SOLID, fold: 0, gmode: 6, offx: 0.5, offy: 0.5, offz: 0.5, fx1: 4.5, fy1: 4.5, fx2: 2.5, fy2: 2.5, rx: 0.2, ry: 0.3, pal: 1, ccyc: 3, glow: 0.5, camDist: 4.2, camTheta: 0.5, camPhi: 0.4 } },
+    { n: "Gnarly Log", s: { ...G, ...SOLID, fold: 0, gmode: 5, fx1: 5, fy1: 5, fx2: 3, fy2: 3, ry: 0.2, pal: 2, ccyc: 2.2, glow: 0.4, camDist: 4.5, camTheta: 0.4, camPhi: 0.3 } },
+    { n: "Gnarly Kaleido 5", s: { ...G, fold: 0, sym: 5, plane: 1, planedepth: 2.2, pal: 5, ccyc: 2.2, glow: 0.5, ...TOP, camDist: 4 } },
+    { n: "Sine Warp Plane", s: { ...G, fold: 1, iters: 6, scale: 1.8, offx: 0.8, offy: 0.8, offz: 0.8, fx1: 4, fy1: 4, fx2: 2.5, fy2: 2.5, plane: 1, planedepth: 3, pal: 1, ccyc: 3.5, glow: 0.7, ...TOP, camDist: 3.5 } },
+    { n: "Sine Warp Solid", s: { ...G, fold: 1, iters: 6, scale: 1.8, offx: 0.8, offy: 0.8, offz: 0.8, fx1: 2.2, fy1: 2.2, fx2: 1.6, fy2: 1.6, pal: 7, ccyc: 2.6, glow: 0.5, camDist: 4.5, camTheta: 0.6, camPhi: 0.4 } },
+    { n: "FBM Clouds", s: { ...G, fold: 2, iters: 3, scale: 1.1, offx: 1.6, offy: 1.6, offz: 1.6, fx1: 1.2, fy1: 1, fx2: 1.4, pal: 8, ccyc: 2, glow: 0.5, camDist: 4.5, camTheta: 0.5, camPhi: 0.4 } },
+    { n: "Eye Vortex Teal", s: { ...G, fold: 3, iters: 6, offx: 0.8, offy: 0.8, offz: 0.8, fx1: 4, fy1: 4, fx2: 3, fy2: 3, ry: 0.1, eyecell: 2.2, eyedepth: 5, eyespin: 2, eyesq: 3, jitter: 0, pal: 7, ccyc: 3, glow: 0.6, camDist: 5, camTheta: 0.3, camPhi: 0.4 } },
+    { n: "Eye Vortex Fire", s: { ...G, fold: 3, iters: 6, offx: 0.8, offy: 0.8, offz: 0.8, fx1: 3.5, fy1: 3.5, fx2: 2.5, fy2: 2.5, eyecell: 1.8, eyedepth: 6, eyespin: 2.5, eyesq: 2, jitter: 0, pal: 1, ccyc: 2.5, glow: 0.7, camDist: 5, camTheta: 0.35, camPhi: 0.38 } },
+    { n: "Eye Vortex Relief", s: { ...G, fold: 3, plane: 1, planedepth: 2.4, mflat: 0.22, iters: 6, offx: 0.8, offy: 0.8, offz: 0.8, fx1: 4, fy1: 4, eyecell: 1.6, eyedepth: 5.5, eyespin: 2.2, eyesq: 3, jitter: 0.8, mirror: 1, pal: 2, ccyc: 2.4, glow: 0.6, ...TOP, camDist: 4 } },
+    { n: "Scroll Tile Green", s: { ...G, fold: 4, iters: 6, ry: 0.1, scrtile: 2, scrroll: 4, scrwave: 1.2, pal: 3, ccyc: 2.8, glow: 0.4, camDist: 5, camTheta: 0.3, camPhi: 0.35 } },
+    { n: "Scroll Tile Chrome", s: { ...G, fold: 4, iters: 7, rx: 0.1, ry: 0.2, fx1: 4, fy1: 4, fx2: 2.5, fy2: 2.5, scrtile: 1.8, scrroll: 5, scrwave: 1.5, pal: 5, ccyc: 1.8, glow: 0.5, metal: 0.7, rough: 0.25, camDist: 4.8, camTheta: 0.4, camPhi: 0.4 } },
+    { n: "Mandala Emerald Bloom", s: { ...G, fold: 5, iters: 7, scale: 1.9, fx1: 4, fy1: 4, fx2: 2.2, fy2: 2.2, pal: 3, ccyc: 2.4, glow: 0.5, mpetals: 4, mflat: 0.16, meyeblend: 0.7, eyecell: 1.1, eyesq: 2.8, eyespin: 1.4, eyedepth: 5, jitter: 1, ...TOP } },
+    { n: "Mandala Azure Lattice", s: { ...G, fold: 5, iters: 8, scale: 2.1, fx1: 4.5, fy1: 4.5, fx2: 2.5, fy2: 2.5, pal: 2, ccyc: 1.9, glow: 0.6, mpetals: 4, mflat: 0.14, meyeblend: 0.8, eyecell: 0.95, eyesq: 3.2, eyespin: 1.7, eyedepth: 6, jitter: 1, ...TOP } },
+    { n: "Mandala Ember 6", s: { ...G, fold: 5, iters: 7, scale: 2, fx1: 4, fy1: 4, fx2: 2.2, fy2: 2.2, pal: 6, ccyc: 2.6, glow: 0.55, mpetals: 6, mflat: 0.2, meyeblend: 0.75, eyecell: 1.2, eyesq: 2.6, eyespin: 1.8, eyedepth: 5.5, jitter: 1, seed: 3, ...TOP } },
+    { n: "Mandala Ortho Plaque", s: { ...G, fold: 5, iters: 7, scale: 2, pal: 4, ccyc: 2.2, glow: 0.4, mpetals: 8, mflat: 0.18, meyeblend: 0.7, eyecell: 1, eyesq: 3, eyespin: 1.6, eyedepth: 5.5, jitter: 1, ortho: 1, orthoScale: 3.2, metal: 0.5, rough: 0.35, ...TOP, camDist: 6 } },
+    { n: "Log-Spiral Sunflower", s: { ...G, fold: 6, mpetals: 8, spiral: 0.6, eyecell: 1, eyedepth: 5, eyespin: 1.4, eyesq: 3, jitter: 0.8, mflat: 0.2, meyeblend: 0.75, pal: 6, ccyc: 2.4, glow: 0.5, seed: 2, ...TOP, camDist: 4 } },
+    { n: "Log-Spiral Vortex", s: { ...G, fold: 6, mpetals: 5, spiral: 1.4, eyecell: 1, eyedepth: 6, eyespin: 2, eyesq: 3.4, jitter: 0.6, mflat: 0.18, meyeblend: 0.8, pal: 2, ccyc: 2, glow: 0.6, seed: 5, ...TOP, camDist: 4 } },
+    { n: "Honeycomb Eyes Gold", s: { ...G, fold: 7, eyecell: 1.5, eyedepth: 2.6, eyespin: 2, eyesq: 4, jitter: 0.8, mflat: 0.2, meyeblend: 0.8, pal: 4, ccyc: 2.2, glow: 0.45, metal: 0.4, ...TOP, camDist: 4.5 } },
+    { n: "Honeycomb Round Teal", s: { ...G, fold: 7, eyecell: 1.3, eyedepth: 3, eyespin: 1, eyesq: 1.4, jitter: 1, mflat: 0.18, meyeblend: 0.7, pal: 7, ccyc: 2.6, glow: 0.55, seed: 4, ...TOP, camDist: 4.5 } },
+    { n: "Truchet Ribbons", s: { ...G, fold: 8, eyecell: 1.2, eyedepth: 3, twidth: 0.22, mflat: 0.22, meyeblend: 0.8, pal: 5, ccyc: 1.6, glow: 0.5, seed: 1, ...TOP, camDist: 4.5 } },
+    { n: "Truchet Fine Weave", s: { ...G, fold: 8, eyecell: 0.8, eyedepth: 4, twidth: 0.14, mflat: 0.2, meyeblend: 1, pal: 3, ccyc: 1.8, glow: 0.45, metal: 0.5, rough: 0.3, seed: 7, ...TOP, camDist: 4.5 } },
+    { n: "Ripple Moire 7", s: { ...G, fold: 9, mpetals: 7, eyecell: 1.6, eyedepth: 4, eyespin: 0, jitter: 0.3, mflat: 0.22, pal: 2, ccyc: 1.8, glow: 0.5, ...TOP, camDist: 5 } },
+    { n: "Ripple Spiral Waves", s: { ...G, fold: 9, mpetals: 4, eyecell: 1.4, eyedepth: 3, eyespin: 2, jitter: 0.2, mflat: 0.2, pal: 8, ccyc: 2.2, glow: 0.55, ...TOP, camDist: 5 } },
+    { n: "Chladni Sand Lines", s: { ...G, fold: 10, mpetals: 7, eyedepth: 3, eyecell: 2.4, mflat: 0.22, meyeblend: 1, pal: 4, ccyc: 1.6, glow: 0.45, metal: 0.4, ...TOP, camDist: 4.5 } },
+    { n: "Chladni Plate Surface", s: { ...G, fold: 10, mpetals: 5, eyedepth: 8, eyecell: 3, mflat: 0.3, meyeblend: 0, pal: 7, ccyc: 2.2, glow: 0.5, ...TOP, camDist: 4.5 } },
+    { n: "Quasicrystal 7", s: { ...G, fold: 11, mpetals: 7, eyedepth: 4, eyecell: 2.2, eyesq: 3, mflat: 0.24, meyeblend: 0.8, pal: 6, ccyc: 2, glow: 0.5, ...TOP, camDist: 5 } },
+    { n: "Quasicrystal 5 Smooth", s: { ...G, fold: 11, mpetals: 5, eyedepth: 5, eyecell: 2.4, eyesq: 2, mflat: 0.22, meyeblend: 0, pal: 2, ccyc: 2.2, glow: 0.55, ...TOP, camDist: 5 } },
+    { n: "Drum Mode 6", s: { ...G, fold: 12, mpetals: 6, eyedepth: 5, eyecell: 1.6, spiral: 0, mflat: 0.26, meyeblend: 0, pal: 5, ccyc: 2.4, glow: 0.5, ...TOP, camDist: 5 } },
+    { n: "Drum Spiral Galaxy", s: { ...G, fold: 12, mpetals: 3, eyedepth: 4, eyecell: 1.8, spiral: 2.5, mflat: 0.26, meyeblend: 0.2, pal: 8, ccyc: 2, glow: 0.55, ...TOP, camDist: 5 } },
+    { n: "Raindrop Pond", s: { ...G, fold: 13, eyedepth: 4, eyecell: 1.8, jitter: 1.5, meyeblend: 0.5, mflat: 0.3, pal: 2, ccyc: 1.6, glow: 0.55, seed: 3, ...TOP, camDist: 5 } },
+    { n: "Raindrop Storm", s: { ...G, fold: 13, eyedepth: 5, eyecell: 1.2, jitter: 1.5, meyeblend: 0.8, mflat: 0.32, pal: 7, ccyc: 2, glow: 0.5, seed: 9, metal: 0.3, ...TOP, camDist: 5 } },
+    { n: "Gnarled Ripples", s: { ...G, fold: 9, iters: 4, mpetals: 5, eyecell: 2, eyedepth: 4, eyespin: 1, jitter: 0.5, mflat: 0.24, warp: 0.7, fx1: 3, fy1: 3.4, fx2: 1.6, fy2: 1.8, pal: 6, ccyc: 2, glow: 0.5, ...TOP, camDist: 5 } },
+    { n: "Gnarled Honeycomb", s: { ...G, fold: 7, iters: 3, eyecell: 1.5, eyedepth: 2.6, eyespin: 2, eyesq: 4, jitter: 0.8, mflat: 0.2, meyeblend: 0.8, warp: 0.5, fx1: 2.4, fy1: 2.4, fx2: 1.4, fy2: 1.4, pal: 4, ccyc: 2.2, glow: 0.45, ...TOP, camDist: 4.5 } },
+    { n: "Warped Chladni", s: { ...G, fold: 10, iters: 4, mpetals: 6, eyedepth: 4, eyecell: 2.6, mflat: 0.22, meyeblend: 1, warp: 0.8, fx1: 2.2, fy1: 2.6, fx2: 1.4, fy2: 1.6, pal: 2, ccyc: 1.8, glow: 0.5, ...TOP, camDist: 4.5 } }
+  ];
+  var _a;
+  for (const p of PRESETS) if (p.s.fold >= 6) p.s.iters = Math.min((_a = p.s.iters) != null ? _a : 4, 4);
+
+  // engine/exporter.js
+  async function exportImage(renderer2, e, opts, hooks = {}) {
+    const { W, H, aa = 1, steps, tile = 256 } = opts;
+    const out = new Uint8ClampedArray(W * H * 4);
+    const n = aa * aa, tilesX = Math.ceil(W / tile), tilesY = Math.ceil(H / tile), total = tilesX * tilesY;
+    let done = 0;
+    for (let ty = 0; ty < tilesY; ty++) for (let tx = 0; tx < tilesX; tx++) {
+      if (hooks.cancelled && hooks.cancelled()) return null;
+      const x = tx * tile, y = ty * tile, w = Math.min(tile, W - x), h = Math.min(tile, H - y);
+      const acc2 = new Float32Array(w * h * 3);
+      for (let sy = 0; sy < aa; sy++) for (let sx = 0; sx < aa; sx++) {
+        renderer2.renderTile(e, { W, H, x, y, w, h, steps, jx: (sx + 0.5) / aa - 0.5, jy: (sy + 0.5) / aa - 0.5 });
+        renderer2.gl.finish();
+        const b = renderer2.readTile(w, h);
+        for (let i = 0, j = 0; i < w * h; i++, j += 4) {
+          acc2[i * 3] += b[j];
+          acc2[i * 3 + 1] += b[j + 1];
+          acc2[i * 3 + 2] += b[j + 2];
+        }
+      }
+      for (let r = 0; r < h; r++) {
+        const dstRow = H - 1 - (y + r);
+        for (let c = 0; c < w; c++) {
+          const s = (r * w + c) * 3, d = (dstRow * W + x + c) * 4;
+          out[d] = acc2[s] / n;
+          out[d + 1] = acc2[s + 1] / n;
+          out[d + 2] = acc2[s + 2] / n;
+          out[d + 3] = 255;
+        }
+      }
+      done++;
+      if (hooks.progress) hooks.progress(done / total);
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    return { W, H, data: out };
+  }
+  async function toPNGBlob({ W, H, data }) {
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    c.getContext("2d").putImageData(new ImageData(data, W, H), 0, 0);
+    return new Promise((res, rej) => c.toBlob((b) => b ? res(b) : rej(new Error("PNG encode failed (image too large for this browser)")), "image/png"));
+  }
+
+  // engine/palettes.js
+  var PALETTES = [
+    { n: "Neon Rainbow", g: "linear-gradient(90deg,#ff4,#0ff,#f0f)" },
+    { n: "Solar Flare", g: "linear-gradient(90deg,#f59e0b,#ef4444)" },
+    { n: "Deep Abyss", g: "linear-gradient(90deg,#0d1b6b,#06b6d4)" },
+    { n: "Emerald Spore", g: "linear-gradient(90deg,#064e3b,#34d399)" },
+    { n: "Obsidian Gold", g: "linear-gradient(90deg,#92400e,#f59e0b,#1e1b4b)" },
+    { n: "Cyberpunk", g: "linear-gradient(90deg,#7c3aed,#ec4899)" },
+    { n: "Ember Lava", g: "linear-gradient(90deg,#7f1d1d,#f97316,#fcd34d)" },
+    { n: "Arctic Deep", g: "linear-gradient(90deg,#0c4a6e,#7dd3fc)" },
+    { n: "Violet Acid", g: "linear-gradient(90deg,#4c1d95,#a78bfa,#fbbf24)" },
+    { n: "Custom", g: "linear-gradient(90deg,#1b1b3a,#c0392b,#f39c12,#fdf2c0)" }
+  ];
+
+  // ui/schema.js
+  var is = (...f) => (s) => f.includes(s.fold);
+  var classic = (s) => s.fold <= 5;
+  var relief = (s) => s.fold >= 6;
+  var shapeOnly = (s) => !VARIATIONS[s.fold].ownPlane;
+  var GM = ["1 cos-sin", "2 sin-sin", "3 cross", "4 squared", "5 log", "6 tan", "7 atan", "8 product"].map((t, i) => [i + 1, t]);
+  var TABS = [
+    { id: "shape", title: "Shape", items: [
+      { t: "select", key: "fold", label: "Variation", opts: VARIATIONS.map((v) => [v.id, v.name]) },
+      { t: "info" },
+      { t: "select", key: "gmode", label: "Gnarly mode", opts: GM, when: is(0) },
+      { t: "head", label: "Fold", when: classic },
+      { t: "s", key: "iters", label: "Iterations", min: 1, max: 20, step: 1, when: classic },
+      { t: "s", key: "scale", label: "Scale", min: 0.3, max: 3.5, step: 0.01, when: classic },
+      { t: "s", key: "offx", label: "Offset X", min: -2, max: 3, step: 0.01, when: classic },
+      { t: "s", key: "offy", label: "Offset Y", min: -2, max: 3, step: 0.01, when: classic },
+      { t: "s", key: "offz", label: "Offset Z", min: -2, max: 3, step: 0.01, when: classic },
+      { t: "s", key: "fx1", label: "Freq X1", min: 0.1, max: 12, step: 0.05, when: classic },
+      { t: "s", key: "fy1", label: "Freq Y1", min: 0.1, max: 12, step: 0.05, when: classic },
+      { t: "s", key: "fx2", label: "Freq X2", min: 0.1, max: 8, step: 0.05, when: classic },
+      { t: "s", key: "fy2", label: "Freq Y2", min: 0.1, max: 8, step: 0.05, when: classic },
+      { t: "head", label: "Domain (pan / zoom / warp)", when: relief },
+      { t: "s", key: "offx", label: "Pan X", min: -2, max: 3, step: 0.01, when: relief },
+      { t: "s", key: "offy", label: "Pan Y", min: -2, max: 3, step: 0.01, when: relief },
+      { t: "s", key: "scale", label: "Zoom (scale)", min: 0.3, max: 3.5, step: 0.01, when: relief },
+      { t: "s", key: "warp", label: "Warp amount", min: 0, max: 1.5, step: 0.01, when: relief },
+      { t: "s", key: "iters", label: "Warp iterations", min: 1, max: 6, step: 1, when: (s) => relief(s) && s.warp > 0 },
+      { t: "s", key: "fx1", label: "Warp freq X1", min: 0.1, max: 12, step: 0.05, when: (s) => relief(s) && s.warp > 0 },
+      { t: "s", key: "fy1", label: "Warp freq Y1", min: 0.1, max: 12, step: 0.05, when: (s) => relief(s) && s.warp > 0 },
+      { t: "s", key: "fx2", label: "Warp freq X2", min: 0.1, max: 8, step: 0.05, when: (s) => relief(s) && s.warp > 0 },
+      { t: "s", key: "fy2", label: "Warp freq Y2", min: 0.1, max: 8, step: 0.05, when: (s) => relief(s) && s.warp > 0 },
+      { t: "head", label: "Rotate (tilts the whole plate)" },
+      { t: "s", key: "rx", label: "Rotate X", min: -3.1416, max: 3.1416, step: 0.01 },
+      { t: "s", key: "ry", label: "Rotate Y", min: -3.1416, max: 3.1416, step: 0.01 },
+      { t: "s", key: "rz", label: "Rotate Z", min: -3.1416, max: 3.1416, step: 0.01 },
+      { t: "head", label: "Eyes / cells / waves", when: is(3, 5, 6, 7, 8, 9, 10, 11, 12, 13) },
+      { t: "s", key: "eyecell", label: "Cell size / wavelength", min: 0.4, max: 5, step: 0.01, when: is(3, 5, 6, 7, 8, 9, 10, 11, 12, 13) },
+      { t: "s", key: "eyedepth", label: "Ring / wave frequency", min: 1, max: 14, step: 0.05, when: is(3, 5, 6, 7, 8, 9, 10, 11, 12, 13) },
+      { t: "s", key: "eyespin", label: "Spiral spin (whole arms in Honeycomb / Ripple)", min: -6, max: 6, step: 0.05, when: is(3, 5, 6, 7, 9) },
+      { t: "s", key: "eyesq", label: "Squareness (terrace levels in Quasicrystal)", min: 1, max: 6, step: 0.05, when: is(3, 5, 6, 7, 11) },
+      { t: "s", key: "jitter", label: "Cell randomness", min: 0, max: 1.5, step: 0.01, when: is(3, 5, 6, 7, 9, 13) },
+      { t: "s", key: "seed", label: "Seed", min: 0, max: 99, step: 1, when: (s) => is(8)(s) || is(3, 5, 6, 7, 9, 13)(s) && s.jitter > 0 },
+      { t: "head", label: "Scroll", when: is(4) },
+      { t: "s", key: "scrtile", label: "Tile size", min: 0.5, max: 5, step: 0.01, when: is(4) },
+      { t: "s", key: "scrroll", label: "Roll", min: -10, max: 10, step: 0.05, when: is(4) },
+      { t: "s", key: "scrwave", label: "Wave height", min: 0, max: 3, step: 0.01, when: is(4) },
+      { t: "head", label: "Relief", when: is(5, 6, 7, 8, 9, 10, 11, 12, 13) },
+      { t: "s", key: "spiral", label: "Spiral arm twist", min: -3, max: 3, step: 0.01, when: is(6, 12) },
+      { t: "s", key: "twidth", label: "Ribbon width", min: 0.05, max: 0.5, step: 5e-3, when: is(8) },
+      { t: "s", key: "mpetals", label: "Petals / arms / sources / modes", min: 1, max: 24, step: 1, when: is(5, 6, 9, 10, 11, 12) },
+      { t: "s", key: "mflat", label: "Relief height", min: 0.02, max: 1, step: 0.01, when: is(5, 6, 7, 8, 9, 10, 11, 12, 13) },
+      { t: "s", key: "meyeblend", label: "Eye / vein / ridge / decay blend", min: 0, max: 1, step: 0.01, when: is(5, 6, 7, 8, 10, 11, 12, 13) },
+      { t: "head", label: "Space" },
+      { t: "toggle", key: "plane", label: "Plane mode (flat relief)", when: shapeOnly },
+      { t: "s", key: "planedepth", label: "Plane depth", min: 0.2, max: 8, step: 0.05, when: (s) => s.plane && shapeOnly(s) },
+      { t: "s", key: "mflat", label: "Plane relief height", min: 0.02, max: 1, step: 0.01, when: (s) => s.plane && shapeOnly(s) },
+      { t: "toggle", key: "mirror", label: "Mirror tiles (seamless)", when: is(3, 4, 5) },
+      { t: "s", key: "sym", label: "Symmetry fold (0 = off)", min: 0, max: 24, step: 1 }
+    ] },
+    { id: "light", title: "Light", items: [
+      { t: "head", label: "Key light" },
+      { t: "s", key: "laz", label: "Azimuth", min: -3.1416, max: 3.1416, step: 0.01 },
+      { t: "s", key: "lel", label: "Elevation", min: -0.2, max: 1.57, step: 0.01 },
+      { t: "s", key: "lint", label: "Intensity", min: 0, max: 4, step: 0.01 },
+      { t: "toggle", key: "lightFollow", label: "Lights follow animated camera" },
+      { t: "toggle", key: "orbitLight", label: "Orbit light" },
+      { t: "toggle", key: "shadows", label: "Shadows" },
+      { t: "s", key: "soft", label: "Shadow softness (higher = sharper)", min: 2, max: 40, step: 0.5 },
+      { t: "head", label: "Fill & ambient" },
+      { t: "s", key: "l2az", label: "Fill azimuth", min: -3.1416, max: 3.1416, step: 0.01 },
+      { t: "s", key: "l2el", label: "Fill elevation", min: -0.2, max: 1.57, step: 0.01 },
+      { t: "s", key: "l2int", label: "Fill intensity", min: 0, max: 2, step: 0.01 },
+      { t: "s", key: "fill", label: "Flat ambient", min: 0, max: 1, step: 0.01 },
+      { t: "s", key: "sky", label: "Sky ambient", min: 0, max: 2, step: 0.01 },
+      { t: "s", key: "rim", label: "Rim light", min: 0, max: 2, step: 0.01 },
+      { t: "head", label: "Occlusion & depth" },
+      { t: "s", key: "ao", label: "AO strength", min: 0, max: 2, step: 0.01 },
+      { t: "s", key: "aor", label: "AO radius", min: 0.05, max: 2, step: 0.01 },
+      { t: "s", key: "fog", label: "Fog", min: 0, max: 0.6, step: 5e-3 }
+    ] },
+    { id: "color", title: "Colour", items: [
+      { t: "pal" },
+      { t: "color", key: "c0", label: "Custom 1", when: (s) => s.pal === 9 },
+      { t: "color", key: "c1", label: "Custom 2", when: (s) => s.pal === 9 },
+      { t: "color", key: "c2", label: "Custom 3", when: (s) => s.pal === 9 },
+      { t: "color", key: "c3", label: "Custom 4", when: (s) => s.pal === 9 },
+      { t: "s", key: "ccyc", label: "Colour cycles", min: 0.1, max: 10, step: 0.05 },
+      { t: "s", key: "cshift", label: "Colour shift", min: 0, max: 6.2832, step: 0.01 },
+      { t: "head", label: "Material" },
+      { t: "s", key: "spec", label: "Specular", min: 0, max: 3, step: 0.01 },
+      { t: "s", key: "rough", label: "Roughness", min: 0.05, max: 1, step: 0.01 },
+      { t: "s", key: "metal", label: "Metallic", min: 0, max: 1, step: 0.01 },
+      { t: "s", key: "sss", label: "Subsurface glow", min: 0, max: 1.5, step: 0.01 },
+      { t: "s", key: "glow", label: "Edge glow", min: 0, max: 2, step: 0.01 },
+      { t: "head", label: "Background" },
+      { t: "color", key: "bg0", label: "Horizon" },
+      { t: "color", key: "bg1", label: "Zenith" },
+      { t: "head", label: "Image" },
+      { t: "image" },
+      { t: "s", key: "imgblend", label: "Image blend", min: 0, max: 1, step: 0.01, when: (s) => s.useimg > 0 },
+      { t: "s", key: "imgscale", label: "Image scale", min: 0.1, max: 8, step: 0.01, when: (s) => s.useimg === 2 },
+      { t: "s", key: "imgrow", label: "Ramp row", min: 0, max: 1, step: 5e-3, when: (s) => s.useimg === 1 },
+      { t: "head", label: "Post" },
+      { t: "select", key: "tonemap", label: "Tonemap", opts: [[0, "ACES"], [1, "Filmic"], [2, "Reinhard"], [3, "None"]] },
+      { t: "s", key: "exposure", label: "Exposure", min: 0.2, max: 4, step: 0.01 },
+      { t: "s", key: "contrast", label: "Contrast", min: 0.5, max: 1.8, step: 0.01 },
+      { t: "s", key: "sat", label: "Saturation", min: 0, max: 2, step: 0.01 },
+      { t: "s", key: "vig", label: "Vignette", min: 0, max: 1, step: 0.01 },
+      { t: "s", key: "grain", label: "Grain", min: 0, max: 1, step: 0.01 }
+    ] },
+    { id: "camera", title: "Camera", items: [
+      { t: "s", key: "camFov", label: "Field of view", min: 0.3, max: 2.2, step: 0.01, when: (s) => !s.ortho },
+      { t: "toggle", key: "ortho", label: "Orthographic" },
+      { t: "s", key: "orthoScale", label: "Ortho size", min: 0.3, max: 20, step: 0.05, when: (s) => s.ortho },
+      { t: "s", key: "camDist", label: "Distance", min: 0.05, max: 50, step: 0.01 },
+      { t: "s", key: "camTheta", label: "Orbit", min: -6.2832, max: 6.2832, step: 0.01 },
+      { t: "s", key: "camPhi", label: "Elevation", min: -1.5, max: 1.5, step: 0.01 },
+      { t: "s", key: "tx", label: "Pan X", min: -10, max: 10, step: 0.01 },
+      { t: "s", key: "ty", label: "Pan Y", min: -10, max: 10, step: 0.01 },
+      { t: "s", key: "tz", label: "Pan Z", min: -10, max: 10, step: 0.01 },
+      { t: "head", label: "Motion" },
+      { t: "toggle", key: "anim", label: "Animate fold" },
+      { t: "s", key: "animSpeed", label: "Speed", min: 0.05, max: 3, step: 0.01 },
+      { t: "toggle", key: "autoRot", label: "Auto-rotate camera" },
+      { t: "select", key: "rotMode", label: "Auto-rotate style", opts: [[0, "Auto (plates sway, solids orbit)"], [1, "Sway (stay on front face)"], [2, "Full orbit (360\xB0)"], [3, "Spin in plane"]], when: (S2) => S2.autoRot },
+      { t: "s", key: "rotRange", label: "Sway range (rad)", min: 0.05, max: 1.5, step: 0.01, when: (S2) => S2.autoRot },
+      { t: "s", key: "drift", label: "Parameter drift", min: 0, max: 2, step: 0.01 },
+      { t: "s", key: "driftSpeed", label: "Drift speed", min: 0.02, max: 1, step: 0.01 }
+    ] },
+    { id: "render", title: "Render", items: [
+      { t: "head", label: "Viewer" },
+      { t: "s", key: "viewScale", label: "Resolution scale", min: 0.25, max: 2, step: 0.05 },
+      { t: "s", key: "liveAA", label: "Samples per frame while animating (smoother, slower)", min: 1, max: 4, step: 1 },
+      { t: "s", key: "viewAA", label: "Viewer refine samples (when still)", min: 1, max: 64, step: 1 },
+      { t: "s", key: "steps", label: "March steps", min: 24, max: 300, step: 1 },
+      { t: "s", key: "detail", label: "Edge detail (lower = sharper)", min: 0.25, max: 3, step: 0.05 },
+      { t: "s", key: "eps", label: "Min surface precision", min: 2e-4, max: 0.01, step: 1e-4 },
+      { t: "s", key: "stepscale", label: "Step safety", min: 0.3, max: 1, step: 0.01 },
+      { t: "s", key: "safe", label: "Distance safety (0 = legacy)", min: 0, max: 1, step: 0.01 },
+      { t: "head", label: "HQ export" },
+      { t: "s", key: "hqSteps", label: "March steps", min: 48, max: 400, step: 1 },
+      { t: "s", key: "hqAA", label: "Anti-alias (N x N)", min: 1, max: 5, step: 1 },
+      { t: "export" }
+    ] },
+    { id: "presets", title: "Presets", items: [{ t: "presets" }, { t: "files" }] }
+  ];
+
+  // ui/controls.js
+  var el = (tag, cls, txt) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (txt != null) e.textContent = txt;
+    return e;
+  };
+  var fmt = (v, step) => {
+    const d = step >= 1 ? 0 : step >= 0.1 ? 1 : step >= 0.01 ? 2 : 4;
+    return Number(v).toFixed(d);
+  };
+  function buildUI(root, S2, api2) {
+    const rows = [];
+    const tabsBar = el("div", "tabs"), panes = el("div", "panes");
+    root.append(tabsBar, panes);
+    TABS.forEach((tab, ti) => {
+      const btn = el("button", "tab", tab.title);
+      btn.dataset.tab = tab.id;
+      const pane = el("div", "pane");
+      pane.dataset.pane = tab.id;
+      btn.onclick = () => {
+        activate(tab.id);
+        try {
+          localStorage.setItem("gnarl.tab", tab.id);
+        } catch (e) {
+        }
+      };
+      tabsBar.append(btn);
+      panes.append(pane);
+      for (const it of tab.items) {
+        const r = makeRow(it);
+        if (r) {
+          pane.append(r.node);
+          rows.push(r);
+        }
+      }
+    });
+    function activate(id) {
+      tabsBar.querySelectorAll(".tab").forEach((b) => b.classList.toggle("on", b.dataset.tab === id));
+      panes.querySelectorAll(".pane").forEach((p) => p.classList.toggle("on", p.dataset.pane === id));
+    }
+    let saved = "shape";
+    try {
+      saved = localStorage.getItem("gnarl.tab") || "shape";
+    } catch (e) {
+    }
+    activate(TABS.some((t) => t.id === saved) ? saved : "shape");
+    function reset(key) {
+      S2[key] = DEFAULTS[key];
+      api2.changed(key);
+      refresh();
+    }
+    function makeRow(it) {
+      const node = el("div", "row " + it.t);
+      let sync = () => {
+      };
+      if (it.t === "head") {
+        node.textContent = it.label;
+        node.className = "head";
+      } else if (it.t === "info") {
+        sync = () => {
+          node.textContent = VARIATIONS[S2.fold].desc;
+        };
+        node.className = "info";
+      } else if (it.t === "s") {
+        const lab = el("label", null, it.label), rng = el("input"), num = el("span", "val"), rst = el("button", "rst", "\u27F2");
+        rng.type = "range";
+        rng.min = it.min;
+        rng.max = it.max;
+        rng.step = it.step;
+        rst.title = "Reset to default (" + DEFAULTS[it.key] + ")";
+        rng.oninput = () => {
+          S2[it.key] = parseFloat(rng.value);
+          num.textContent = fmt(S2[it.key], it.step);
+          api2.changed(it.key);
+          refreshVis();
+          rows.forEach((r) => r !== self && r.key === it.key && r.sync());
+        };
+        rst.onclick = () => reset(it.key);
+        sync = () => {
+          rng.value = S2[it.key];
+          num.textContent = fmt(S2[it.key], it.step);
+          rst.classList.toggle("dim", S2[it.key] === DEFAULTS[it.key]);
+        };
+        node.append(lab, rst, rng, num);
+      } else if (it.t === "select") {
+        const lab = el("label", null, it.label), sel = el("select"), rst = el("button", "rst", "\u27F2");
+        for (const [v, t] of it.opts) {
+          const o = el("option", null, t);
+          o.value = v;
+          sel.append(o);
+        }
+        sel.onchange = () => {
+          S2[it.key] = parseInt(sel.value, 10);
+          api2.changed(it.key);
+          refresh();
+        };
+        rst.onclick = () => reset(it.key);
+        sync = () => {
+          sel.value = S2[it.key];
+          rst.classList.toggle("dim", S2[it.key] === DEFAULTS[it.key]);
+        };
+        node.append(lab, rst, sel);
+      } else if (it.t === "toggle") {
+        const lab = el("label", "tg"), cb = el("input");
+        cb.type = "checkbox";
+        lab.append(cb, document.createTextNode(" " + it.label));
+        cb.onchange = () => {
+          S2[it.key] = cb.checked ? 1 : 0;
+          api2.changed(it.key);
+          refresh();
+        };
+        sync = () => {
+          cb.checked = !!S2[it.key];
+        };
+        node.append(lab);
+      } else if (it.t === "color") {
+        const lab = el("label", null, it.label), c = el("input"), rst = el("button", "rst", "\u27F2");
+        c.type = "color";
+        c.oninput = () => {
+          S2[it.key] = c.value;
+          api2.changed(it.key);
+        };
+        rst.onclick = () => reset(it.key);
+        sync = () => {
+          c.value = S2[it.key];
+          rst.classList.toggle("dim", S2[it.key] === DEFAULTS[it.key]);
+        };
+        node.append(lab, rst, c);
+      } else if (it.t === "pal") {
+        const g = el("div", "pals");
+        PALETTES.forEach((p, i) => {
+          const b = el("button", "pal");
+          b.style.background = p.g;
+          b.title = p.n;
+          b.onclick = () => {
+            S2.pal = i;
+            api2.changed("pal");
+            refresh();
+          };
+          g.append(b);
+        });
+        sync = () => g.childNodes.forEach((b, i) => b.classList.toggle("on", S2.pal === i));
+        node.append(g);
+      } else if (it.t === "image") {
+        const up = el("button", "btn", "Load image\u2026"), modes = el("div", "seg");
+        up.onclick = () => api2.pickImage();
+        [["Off", 0], ["Colour ramp", 1], ["Surface map", 2]].forEach(([t, m]) => {
+          const b = el("button", null, t);
+          b.onclick = () => api2.setImgMode(m);
+          b.dataset.m = m;
+          modes.append(b);
+        });
+        sync = () => modes.childNodes.forEach((b) => b.classList.toggle("on", +b.dataset.m === S2.useimg));
+        node.append(up, modes);
+      } else if (it.t === "export") {
+        const b = el("button", "btn primary", "HQ export\u2026");
+        b.onclick = () => api2.openExport();
+        node.append(b);
+      } else if (it.t === "presets") {
+        const g = el("div", "plist");
+        PRESETS.forEach((p, i) => {
+          const b = el("button", "preset", p.n);
+          b.onclick = () => {
+            api2.loadPreset(i);
+            g.childNodes.forEach((x) => x.classList.remove("on"));
+            b.classList.add("on");
+          };
+          g.append(b);
+        });
+        node.append(g);
+      } else if (it.t === "files") {
+        const a = el("button", "btn", "Save settings (.json)"), b = el("button", "btn", "Load settings\u2026");
+        a.onclick = () => api2.saveFile();
+        b.onclick = () => api2.loadFile();
+        node.append(a, b);
+      } else return null;
+      const self = { node, when: it.when, sync, key: it.key };
+      return self;
+    }
+    function refreshVis() {
+      for (const r of rows) r.node.classList.toggle("hide", !!(r.when && !r.when(S2)));
+    }
+    function refresh() {
+      for (const r of rows) r.sync();
+      refreshVis();
+    }
+    refresh();
+    return { refresh };
+  }
+
+  // engine/mp4.js
+  var T = 9e4;
+  var u8 = (...a) => Uint8Array.from(a);
+  var u16 = (n) => u8(n >> 8 & 255, n & 255);
+  var u32 = (...ns) => {
+    const o = new Uint8Array(ns.length * 4);
+    ns.forEach((n, i) => {
+      n = n >>> 0;
+      o[i * 4] = n >>> 24;
+      o[i * 4 + 1] = n >>> 16 & 255;
+      o[i * 4 + 2] = n >>> 8 & 255;
+      o[i * 4 + 3] = n & 255;
+    });
+    return o;
+  };
+  var str = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
+  var zeros = (n) => new Uint8Array(n);
+  function cat(parts) {
+    let n = 0;
+    for (const p of parts) n += p.length;
+    const o = new Uint8Array(n);
+    let k = 0;
+    for (const p of parts) {
+      o.set(p, k);
+      k += p.length;
+    }
+    return o;
+  }
+  var box = (type, ...parts) => {
+    const body = cat(parts);
+    return cat([u32(body.length + 8), str(type), body]);
+  };
+  var full = (type, ver, flags, ...parts) => box(type, u8(ver, flags >> 16 & 255, flags >> 8 & 255, flags & 255), ...parts);
+  var MATRIX = u32(65536, 0, 0, 0, 65536, 0, 0, 0, 1073741824);
+  var MP4Muxer = class {
+    constructor({ width, height, description }) {
+      if (!description || !description.length) throw new Error("MP4 muxer needs the avcC decoder description");
+      this.w = width;
+      this.h = height;
+      this.avcC = new Uint8Array(description);
+      this.s = [];
+    }
+    // data: length-prefixed H.264 access unit; ts in microseconds (decode order == presentation order, no B-frames)
+    addSample(data, tsUs, isKey) {
+      this.s.push({ d: data, ts: Math.round(tsUs * T / 1e6), key: !!isKey });
+    }
+    get duration() {
+      const s = this.s;
+      if (!s.length) return 0;
+      const last = s.length > 1 ? s[s.length - 1].ts - s[s.length - 2].ts : T / 30;
+      return s[s.length - 1].ts - s[0].ts + last;
+    }
+    _moov(offset) {
+      const s = this.s, n = s.length, dur = this.duration, w = this.w, h = this.h;
+      const deltas = s.map((x, i) => i + 1 < n ? s[i + 1].ts - x.ts : n > 1 ? s[i].ts - s[i - 1].ts : T / 30);
+      const stts = [];
+      for (let i = 0; i < n; ) {
+        let j = i;
+        while (j < n && deltas[j] === deltas[i]) j++;
+        stts.push(j - i, deltas[i]);
+        i = j;
+      }
+      const keys = [];
+      s.forEach((x, i) => {
+        if (x.key) keys.push(i + 1);
+      });
+      const avc1 = box("avc1", zeros(6), u16(1), zeros(16), u16(w), u16(h), u32(4718592, 4718592, 0), u16(1), zeros(32), u16(24), u16(65535), box("avcC", this.avcC));
+      const stbl = box(
+        "stbl",
+        full("stsd", 0, 0, u32(1), avc1),
+        full("stts", 0, 0, u32(stts.length / 2), u32(...stts)),
+        full("stss", 0, 0, u32(keys.length), u32(...keys)),
+        full("stsc", 0, 0, u32(1), u32(1, n, 1)),
+        full("stsz", 0, 0, u32(0, n), u32(...s.map((x) => x.d.length))),
+        full("stco", 0, 0, u32(1), u32(offset))
+      );
+      const minf = box("minf", full("vmhd", 0, 1, zeros(8)), box("dinf", full("dref", 0, 0, u32(1), full("url ", 0, 1))), stbl);
+      const mdia = box("mdia", full("mdhd", 0, 0, u32(0, 0, T, dur), u16(21956), u16(0)), full("hdlr", 0, 0, u32(0), str("vide"), zeros(12), str("VideoHandler\0")), minf);
+      const trak = box("trak", full("tkhd", 0, 3, u32(0, 0, 1, 0, dur), zeros(8), u16(0), u16(0), u16(0), u16(0), MATRIX, u32(w << 16, h << 16)), mdia);
+      const mvhd = full("mvhd", 0, 0, u32(0, 0, T, dur, 65536), u16(256), zeros(10), MATRIX, zeros(24), u32(2));
+      return box("moov", mvhd, trak);
+    }
+    finish() {
+      if (!this.s.length) throw new Error("no video samples");
+      const ftyp = box("ftyp", str("isom"), u32(512), str("isom"), str("iso2"), str("avc1"), str("mp41"));
+      const mdatSize = this.s.reduce((a, x) => a + x.d.length, 0) + 8;
+      if (mdatSize > 4294967280) throw new Error("video larger than 4 GB: lower resolution, duration or quality");
+      const moovLen = this._moov(0).length, moov = this._moov(ftyp.length + moovLen + 8);
+      return new Blob([ftyp, moov, u32(mdatSize), str("mdat"), ...this.s.map((x) => x.d)], { type: "video/mp4" });
+    }
+  };
+
+  // engine/zip.js
+  var TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(b) {
+    let c = ~0;
+    for (let i = 0; i < b.length; i++) c = TABLE[(c ^ b[i]) & 255] ^ c >>> 8;
+    return ~c >>> 0;
+  }
+  async function zipStore(files) {
+    const parts = [], central = [];
+    let off = 0;
+    const le = (n, bytes) => {
+      const a = new Uint8Array(bytes);
+      for (let i = 0; i < bytes; i++) a[i] = n / 2 ** (8 * i) & 255;
+      return a;
+    };
+    for (const f of files) {
+      const data = new Uint8Array(await f.blob.arrayBuffer()), name = new TextEncoder().encode(f.name), crc = crc32(data);
+      const common = [le(20, 2), le(0, 2), le(0, 2), le(0, 2), le(33, 2), le(crc, 4), le(data.length, 4), le(data.length, 4), le(name.length, 2), le(0, 2)];
+      parts.push(le(67324752, 4), ...common, name, data);
+      central.push(le(33639248, 4), le(20, 2), ...common, le(0, 2), le(0, 2), le(0, 2), le(0, 4), le(off, 4), name);
+      off += 30 + name.length + data.length;
+    }
+    const cdLen = central.reduce((a, p) => a + p.length, 0);
+    return new Blob([...parts, ...central, le(101010256, 4), le(0, 2), le(0, 2), le(files.length, 2), le(files.length, 2), le(cdLen, 4), le(off, 4), le(0, 2)], { type: "application/zip" });
+  }
+
+  // engine/video.js
+  var VID_MODES = ["Scene animation", "Turntable (follows Auto-rotate mode)", "Scene + turntable"];
+  var VID_QUALITY = [["Draft", 0.07], ["Standard", 0.14], ["High", 0.25], ["Maximum", 0.5]];
+  var VID_FORMATS = ["MP4 (H.264)", "PNG sequence (.zip)"];
+  var frameCount = (S2) => Math.max(1, Math.round(S2.vidDur * S2.vidFps));
+  function autoBitrate(S2, W, H) {
+    return Math.round(W * H * S2.vidFps * VID_QUALITY[S2.vidQ][1]);
+  }
+  function frameState(S2, i, n, t0) {
+    const p = i / n, u = S2.vidLoop ? p < 0.5 ? 2 * p : 2 - 2 * p : p;
+    const turn = S2.vidMode >= 1, scene = S2.vidMode !== 1;
+    const t = scene ? t0 + u * S2.vidDur * S2.animSpeed * S2.vidSpeed : t0;
+    const e = effective(turn ? { ...S2, autoRot: 0 } : S2, t);
+    if (turn) {
+      applyRot(e, S2, S2.vidTurns * 2 * Math.PI * p);
+      followLight(e, S2);
+    }
+    if (S2.vidDolly !== 1) {
+      const k = 1 + (S2.vidDolly - 1) * u * u * (3 - 2 * u);
+      if (S2.ortho) e.orthoScale = S2.orthoScale * k;
+      else e.camDist = S2.camDist * k;
+    }
+    return e;
+  }
+  function avcLevel(W, H, fps) {
+    const L = [[31, 921600, 27648e3], [40, 2097152, 62914560], [42, 2097152, 133693440], [51, 9437184, 251658240], [52, 9437184, 530841600], [60, 35651584, 1069547520], [62, 35651584, 4278190080]];
+    return (L.find((l) => W * H <= l[1] && W * H * fps <= l[2]) || L[L.length - 1])[0];
+  }
+  var hex = (n) => n.toString(16).padStart(2, "0");
+  async function pickConfig(W, H, fps, bitrate) {
+    if (typeof VideoEncoder === "undefined" || typeof VideoFrame === "undefined") return null;
+    for (const prof of ["64", "4d", "42"]) {
+      const cfg = { codec: "avc1." + prof + "00" + hex(avcLevel(W, H, fps)), width: W, height: H, bitrate, framerate: fps, avc: { format: "avc" }, latencyMode: "quality" };
+      try {
+        const r = await VideoEncoder.isConfigSupported(cfg);
+        if (r.supported) return cfg;
+      } catch (_) {
+      }
+    }
+    return null;
+  }
+  async function videoSupport(S2, W, H) {
+    const mp4 = !!await pickConfig(W & ~1, H & ~1, S2.vidFps, autoBitrate(S2, W, H));
+    const mr = typeof MediaRecorder !== "undefined" && ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((m) => MediaRecorder.isTypeSupported(m));
+    return { mp4, compat: mr || null };
+  }
+  var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function exportVideo(renderer2, S2, opts, hooks = {}) {
+    var _a2;
+    const W = opts.W & ~1, H = opts.H & ~1, { fps, n } = opts, t0 = (_a2 = opts.t0) != null ? _a2 : 0, started = performance.now();
+    const renderFrame2 = (i) => exportImage(renderer2, frameState(S2, i, n, t0), { W, H, aa: opts.aa, steps: opts.steps, tile: 512 }, { cancelled: hooks.cancelled });
+    const report = (i) => {
+      const el2 = (performance.now() - started) / 1e3, done = i + 1;
+      hooks.progress && hooks.progress({ frame: done, n, elapsed: el2, eta: el2 / done * (n - done) });
+    };
+    const cancelled2 = () => hooks.cancelled && hooks.cancelled();
+    if (opts.format === 1) {
+      const files = [];
+      for (let i = 0; i < n; i++) {
+        const img = await renderFrame2(i);
+        if (!img || cancelled2()) return null;
+        hooks.preview && hooks.preview(img);
+        files.push({ name: "frame_" + String(i + 1).padStart(5, "0") + ".png", blob: await toPNGBlob(img) });
+        report(i);
+      }
+      return { blob: await zipStore(files), ext: "zip", note: n + " PNG frames @ " + fps + " fps, " + W + "\xD7" + H };
+    }
+    const cfg = opts.compat ? null : await pickConfig(W, H, fps, opts.bitrate);
+    if (cfg) {
+      let desc = null, err = null;
+      const samples = [];
+      const enc = new VideoEncoder({
+        output: (chunk, meta) => {
+          if (!desc && meta && meta.decoderConfig && meta.decoderConfig.description) {
+            const q = meta.decoderConfig.description;
+            desc = new Uint8Array(q instanceof ArrayBuffer ? q.slice(0) : q.buffer.slice(q.byteOffset, q.byteOffset + q.byteLength));
+          }
+          const d = new Uint8Array(chunk.byteLength);
+          chunk.copyTo(d);
+          samples.push({ d, ts: chunk.timestamp, key: chunk.type === "key" });
+        },
+        error: (e) => {
+          err = e;
+        }
+      });
+      enc.configure(cfg);
+      const keyEvery = Math.max(1, Math.round(fps * 2));
+      for (let i = 0; i < n; i++) {
+        const img = await renderFrame2(i);
+        if (!img || cancelled2()) {
+          try {
+            enc.close();
+          } catch (_) {
+          }
+          return null;
+        }
+        hooks.preview && hooks.preview(img);
+        const vf = new VideoFrame(img.data, { format: "RGBA", codedWidth: W, codedHeight: H, timestamp: Math.round(i * 1e6 / fps), duration: Math.round(1e6 / fps) });
+        enc.encode(vf, { keyFrame: i % keyEvery === 0 });
+        vf.close();
+        while (enc.encodeQueueSize > 3 && !err) await sleep(4);
+        if (err) throw err;
+        report(i);
+      }
+      await enc.flush();
+      enc.close();
+      if (err) throw err;
+      if (!desc || !samples.length) throw new Error("encoder produced no decoder configuration");
+      for (let i = 1; i < samples.length; i++) if (samples[i].ts <= samples[i - 1].ts) throw new Error("encoder reordered frames (B-frames); use compatibility mode");
+      const mux = new MP4Muxer({ width: W, height: H, description: desc });
+      for (const s of samples) mux.addSample(s.d, s.ts, s.key);
+      return { blob: mux.finish(), ext: "mp4", note: "MP4 H.264 (" + cfg.codec + ") " + W + "\xD7" + H + " @ " + fps + " fps, " + (opts.bitrate / 1e6).toFixed(1) + " Mbit/s" };
+    }
+    const mime = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((m) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(m));
+    if (!mime) throw new Error("This browser can neither encode H.264 (WebCodecs) nor record video (MediaRecorder). Use PNG sequence.");
+    const cv = document.createElement("canvas");
+    cv.width = W;
+    cv.height = H;
+    const cx = cv.getContext("2d");
+    const jpgs = [];
+    for (let i = 0; i < n; i++) {
+      const img = await renderFrame2(i);
+      if (!img || cancelled2()) return null;
+      hooks.preview && hooks.preview(img);
+      cx.putImageData(new ImageData(img.data, W, H), 0, 0);
+      jpgs.push(await new Promise((r) => cv.toBlob(r, "image/jpeg", 0.95)));
+      report(i);
+    }
+    const stream = cv.captureStream(0), track = stream.getVideoTracks()[0], chunks = [];
+    const rec2 = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: opts.bitrate });
+    rec2.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    const stopped = new Promise((r) => {
+      rec2.onstop = r;
+    });
+    rec2.start();
+    const t1 = performance.now();
+    for (let i = 0; i < n; i++) {
+      const bm = await createImageBitmap(jpgs[i]);
+      cx.drawImage(bm, 0, 0);
+      bm.close();
+      if (track.requestFrame) track.requestFrame();
+      const wait = t1 + (i + 1) * 1e3 / fps - performance.now();
+      if (wait > 0) await sleep(wait);
+      if (cancelled2()) {
+        rec2.stop();
+        return null;
+      }
+    }
+    rec2.stop();
+    await stopped;
+    const mp4 = mime.startsWith("video/mp4");
+    return { blob: new Blob(chunks, { type: mp4 ? "video/mp4" : "video/webm" }), ext: mp4 ? "mp4" : "webm", note: "Compatibility mode (" + mime + "), " + W + "\xD7" + H + " @ " + fps + " fps" };
+  }
+
+  // ui/videoui.js
+  var RES = [["720p", 1280, 720], ["1080p", 1920, 1080], ["1440p", 2560, 1440], ["4K", 3840, 2160], ["Square 1080", 1080, 1080], ["Vertical 1080\xD71920", 1080, 1920]];
+  function initVideoUI(ctx) {
+    const { S: S2, renderer: renderer2, setBusy, after, download: download2, stamp: stamp2, VERSION: VERSION2 } = ctx, $2 = (id) => document.getElementById(id);
+    let running = false, cancelled2 = false, support = { mp4: false, compat: null };
+    const F = [
+      // [key, label, kind, options]
+      ["vidFmt", "Format", "sel", VID_FORMATS],
+      ["vidFps", "Frame rate", "sel", [24, 25, 30, 50, 60], true],
+      ["vidW", "Width", "num", [64, 8192, 2]],
+      ["vidH", "Height", "num", [64, 8192, 2]],
+      ["vidDur", "Duration (s)", "num", [0.5, 120, 0.5]],
+      ["vidMode", "Motion", "sel", VID_MODES],
+      ["vidSpeed", "Animation speed \xD7", "num", [0.05, 10, 0.05]],
+      ["vidTurns", "Turntable turns (\u2212 = reverse)", "num", [-8, 8, 0.25]],
+      ["vidDolly", "Dolly: end distance \xD7", "num", [0.2, 4, 0.05]],
+      ["vidQ", "Quality", "sel", VID_QUALITY.map((q) => q[0])],
+      ["vidAA", "Anti-alias (N\xD7N)", "num", [1, 5, 1]],
+      ["vidSteps", "March steps", "num", [48, 400, 1]],
+      ["vidLoop", "Ping-pong: scene motion plays forward then back (seamless loop)", "chk"],
+      ["_compat", "Force compatibility recorder (real-time MediaRecorder)", "chk"]
+    ];
+    const inputs = {}, form = $2("vForm");
+    for (const [key, label, kind, opt, numeric] of F) {
+      const l = document.createElement("label");
+      let el2;
+      if (kind === "chk") {
+        l.className = "chk";
+        el2 = document.createElement("input");
+        el2.type = "checkbox";
+        l.append(el2, label);
+      } else {
+        l.append(label);
+        if (kind === "sel") {
+          el2 = document.createElement("select");
+          opt.forEach((o, i) => {
+            const op = document.createElement("option");
+            op.value = numeric ? o : i;
+            op.textContent = o;
+            el2.append(op);
+          });
+        } else {
+          el2 = document.createElement("input");
+          el2.type = "number";
+          [el2.min, el2.max, el2.step] = opt;
+        }
+        l.append(el2);
+      }
+      el2.oninput = el2.onchange = () => {
+        read();
+        note();
+      };
+      inputs[key] = el2;
+      form.append(l);
+    }
+    const clamp2 = (v, a, b) => Math.min(b, Math.max(a, v));
+    function read() {
+      for (const [key, , kind, opt] of F) {
+        if (key === "_compat") continue;
+        const el2 = inputs[key];
+        if (kind === "chk") S2[key] = el2.checked ? 1 : 0;
+        else {
+          let v = parseFloat(el2.value);
+          if (!isFinite(v)) continue;
+          if (kind === "num") v = clamp2(v, opt[0], opt[1]);
+          S2[key] = v;
+        }
+      }
+    }
+    function write() {
+      for (const [key, , kind] of F) {
+        if (key === "_compat") continue;
+        const el2 = inputs[key];
+        if (kind === "chk") el2.checked = !!S2[key];
+        else el2.value = S2[key];
+      }
+    }
+    const dims2 = () => {
+      const m = renderer2.maxDim();
+      return { W: clamp2(Math.round(S2.vidW) & ~1, 64, m & ~1), H: clamp2(Math.round(S2.vidH) & ~1, 64, m & ~1) };
+    };
+    function note() {
+      const { W, H } = dims2(), n = frameCount(S2), bps = autoBitrate(S2, W, H), mp = S2.vidFmt === 0;
+      const mode = !mp ? "PNG sequence" : support.mp4 && !inputs._compat.checked ? "MP4 H.264 (WebCodecs)" : support.compat ? "compatibility recorder (" + (support.compat.includes("mp4") ? "MP4" : "WebM") + ", real-time, slower)" : "NOT SUPPORTED by this browser \u2014 use PNG sequence";
+      $2("vNote").textContent = W + "\xD7" + H + " \xB7 " + n + " frames \xB7 " + S2.vidAA ** 2 + " samples/px \xB7 " + mode + (mp ? " \xB7 ~" + (bps * S2.vidDur / 8e6).toFixed(0) + " MB at " + (bps / 1e6).toFixed(1) + " Mbit/s" : "") + ". Start time " + (S2.t || 0).toFixed(2) + "s. Frames render offline, so playback is always smooth.";
+    }
+    async function open() {
+      $2("vmodal").classList.remove("hide");
+      write();
+      const box2 = $2("vRes");
+      box2.innerHTML = "";
+      RES.forEach(([n, w, h]) => {
+        const b = document.createElement("button");
+        b.textContent = n;
+        b.onclick = () => {
+          S2.vidW = w;
+          S2.vidH = h;
+          write();
+          note();
+        };
+        box2.append(b);
+      });
+      support = await videoSupport(S2, S2.vidW, S2.vidH);
+      note();
+    }
+    $2("bVid").onclick = open;
+    $2("vCancel").onclick = () => {
+      cancelled2 = true;
+      if (!running) $2("vmodal").classList.add("hide");
+    };
+    $2("vGo").onclick = async () => {
+      if (running) return;
+      read();
+      const { W, H } = dims2(), n = frameCount(S2), t0 = S2.t || 0;
+      running = true;
+      cancelled2 = false;
+      setBusy(true);
+      $2("vGo").disabled = true;
+      $2("vBar").style.width = "0";
+      const pv = $2("vPrev"), pc = pv.getContext("2d"), tmp = document.createElement("canvas");
+      try {
+        support = await videoSupport(S2, W, H);
+        const r = await exportVideo(renderer2, S2, { W, H, fps: S2.vidFps, n, format: S2.vidFmt, compat: inputs._compat.checked || !support.mp4, bitrate: autoBitrate(S2, W, H), aa: S2.vidAA, steps: S2.vidSteps, t0 }, {
+          cancelled: () => cancelled2,
+          progress: (p) => {
+            $2("vBar").style.width = (p.frame / p.n * 100).toFixed(1) + "%";
+            $2("vNote").textContent = "Frame " + p.frame + " / " + p.n + " \xB7 " + p.elapsed.toFixed(0) + "s elapsed \xB7 ~" + Math.ceil(p.eta) + "s left";
+          },
+          preview: (img) => {
+            if (tmp.width !== img.W) {
+              tmp.width = img.W;
+              tmp.height = img.H;
+            }
+            tmp.getContext("2d").putImageData(new ImageData(img.data, img.W, img.H), 0, 0);
+            pc.drawImage(tmp, 0, 0, pv.width, pv.height);
+          }
+        });
+        if (r) {
+          download2(r.blob, "gnarl-" + stamp2() + "-" + W + "x" + H + "-" + S2.vidFps + "fps-v" + VERSION2 + "." + r.ext);
+          $2("vNote").textContent = "Done: " + r.note + " \xB7 " + (r.blob.size / 1e6).toFixed(1) + " MB.";
+        } else $2("vNote").textContent = "Cancelled.";
+      } catch (err) {
+        $2("vNote").textContent = "Error: " + (err && err.message || err);
+        console.error(err);
+      }
+      const wasCancelled = cancelled2;
+      running = false;
+      setBusy(false);
+      $2("vGo").disabled = false;
+      after();
+      if (wasCancelled) $2("vmodal").classList.add("hide");
+    };
+    return { open };
+  }
+
+  // main.js
+  var BUILD = "gnarl-studio v" + VERSION;
+  console.log("[" + BUILD + "] init");
+  document.getElementById("ver").textContent = "v" + VERSION;
+  var $ = (id) => document.getElementById(id);
+  var canvas = $("gl");
+  var errBox = $("err");
+  var S = makeState();
+  var renderer;
+  try {
+    renderer = new Renderer(canvas);
+  } catch (e) {
+    showErr(e);
+    throw e;
+  }
+  function showErr(e) {
+    errBox.textContent = String(e && e.message || e);
+    errBox.classList.remove("hide");
+    console.error(e);
+  }
+  var dirty = true;
+  var paused = false;
+  var busy = false;
+  var lastInteract = 0;
+  var lastT = performance.now();
+  var markDirty = () => {
+    dirty = true;
+  };
+  var ui;
+  var api = {
+    changed(key) {
+      if (key === "fold" || key === "plane") tryCompile();
+      markDirty();
+    },
+    loadPreset(i) {
+      Object.assign(S, DEFAULTS, PRESETS[i].s);
+      tryCompile();
+      ui.refresh();
+      markDirty();
+    },
+    openExport: () => openModal(),
+    pickImage: () => $("fImg").click(),
+    setImgMode(m) {
+      S.useimg = m;
+      ui.refresh();
+      markDirty();
+    },
+    saveFile() {
+      download(new Blob([serialize(S)], { type: "application/json" }), "gnarl-settings-v" + VERSION + ".json");
+    },
+    loadFile: () => $("fJson").click()
+  };
+  ui = buildUI($("ui"), S, api);
+  {
+    const i = PRESETS.findIndex((p) => p.n === "Mandala Azure Lattice");
+    if (i >= 0) {
+      Object.assign(S, DEFAULTS, PRESETS[i].s);
+      ui.refresh();
+    }
+  }
+  function tryCompile() {
+    try {
+      renderer.compile(S.fold, S.plane);
+      errBox.classList.add("hide");
+    } catch (e) {
+      showErr(e);
+    }
+  }
+  tryCompile();
+  function loadImageFile(f) {
+    if (!f || !f.type.startsWith("image/")) return;
+    const img = new Image(), url = URL.createObjectURL(f);
+    img.onload = () => {
+      renderer.setImage(img);
+      URL.revokeObjectURL(url);
+      if (!S.useimg) S.useimg = 1;
+      ui.refresh();
+      markDirty();
+    };
+    img.onerror = () => showErr("Could not read that image.");
+    img.src = url;
+  }
+  $("fImg").onchange = (e) => {
+    loadImageFile(e.target.files[0]);
+    e.target.value = "";
+  };
+  addEventListener("dragover", (e) => e.preventDefault());
+  addEventListener("drop", (e) => {
+    e.preventDefault();
+    loadImageFile(e.dataTransfer.files[0]);
+  });
+  $("fJson").onchange = (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    f.text().then((t) => {
+      Object.assign(S, deserialize(t));
+      tryCompile();
+      ui.refresh();
+      markDirty();
+    }).catch(showErr);
+  };
+  var clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  var ptrs = /* @__PURE__ */ new Map();
+  var lastPinch = 0;
+  canvas.addEventListener("pointerdown", (e) => {
+    canvas.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY, b: e.button, shift: e.shiftKey });
+    lastInteract = performance.now();
+  });
+  canvas.addEventListener("pointerup", (e) => {
+    ptrs.delete(e.pointerId);
+    lastPinch = 0;
+    markDirty();
+  });
+  canvas.addEventListener("pointercancel", (e) => ptrs.delete(e.pointerId));
+  canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+  canvas.addEventListener("pointermove", (e) => {
+    const p = ptrs.get(e.pointerId);
+    if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    p.x = e.clientX;
+    p.y = e.clientY;
+    lastInteract = performance.now();
+    if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (lastPinch) S.camDist = clamp(S.camDist * lastPinch / d, 0.05, 50);
+      lastPinch = d;
+    } else if (p.b === 2 || p.shift || e.shiftKey) {
+      const k = S.camDist * 16e-4, th = S.camTheta;
+      S.tx -= Math.cos(th) * dx * k;
+      S.tz += Math.sin(th) * dx * k;
+      S.ty += dy * k;
+    } else {
+      S.camTheta -= dx * 6e-3;
+      S.camPhi = clamp(S.camPhi + dy * 6e-3, -1.5, 1.5);
+    }
+    ui.refresh();
+    markDirty();
+  });
+  canvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    S.camDist = clamp(S.camDist * Math.exp(e.deltaY * 12e-4), 0.05, 50);
+    lastInteract = performance.now();
+    ui.refresh();
+    markDirty();
+  }, { passive: false });
+  $("bPlay").onclick = () => {
+    paused = !paused;
+    $("bPlay").textContent = paused ? "\u25B6" : "\u23F8";
+  };
+  $("bCam").onclick = () => {
+    for (const k of ["camTheta", "camPhi", "camDist", "camFov", "tx", "ty", "tz"]) S[k] = DEFAULTS[k];
+    ui.refresh();
+    markDirty();
+  };
+  $("bRand").onclick = () => {
+    S.seed = Math.floor(Math.random() * 100);
+    ui.refresh();
+    markDirty();
+  };
+  function download(blob, name) {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4e3);
+  }
+  $("bSnap").onclick = () => {
+    const { w, h } = viewSize(false);
+    renderFrame(w, h);
+    while (acc < S.viewAA) refineStep();
+    canvas.toBlob((b) => download(b, "gnarl-snapshot-" + stamp() + ".png"));
+  };
+  var rec = null;
+  $("bRec").onclick = () => {
+    if (rec) {
+      rec.stop();
+      return;
+    }
+    const stream = canvas.captureStream(30), chunks = [];
+    const mime = ["video/webm;codecs=vp9", "video/webm"].find((m) => MediaRecorder.isTypeSupported(m));
+    rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 });
+    rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+    rec.onstop = () => {
+      download(new Blob(chunks, { type: "video/webm" }), "gnarl-" + stamp() + ".webm");
+      rec = null;
+      $("bRec").textContent = "\u23FA Record";
+    };
+    rec.start();
+    $("bRec").textContent = "\u23F9 Stop";
+  };
+  var stamp = () => VARIATIONS[S.fold].name.replace(/\W+/g, "") + "-" + Date.now().toString(36);
+  function viewSize(interacting) {
+    const d = Math.min(devicePixelRatio || 1, 2), k = S.viewScale * (interacting ? 0.5 : 1);
+    return { w: Math.max(16, Math.round(canvas.clientWidth * d * k)), h: Math.max(16, Math.round(canvas.clientHeight * d * k)) };
+  }
+  var acc = 0;
+  var accW = 0;
+  var accH = 0;
+  function renderFrame(w, h) {
+    const e = effective(S, S.t || 0);
+    renderer.renderScene(e, w, h);
+    acc = 1;
+    accW = w;
+    accH = h;
+    hud(w, h);
+  }
+  function hud(w, h) {
+    $("hud").textContent = VARIATIONS[S.fold].name + "  " + w + "\xD7" + h + "  dist " + S.camDist.toFixed(2) + (acc > 1 || acc < S.viewAA ? "  \xB7  " + acc + "/" + S.viewAA + " samples" : "");
+  }
+  function refineStep() {
+    const e = effective(S, S.t || 0), j = jitter(acc);
+    renderer.renderTile(e, { W: accW, H: accH, jx: j[0], jy: j[1], blend: 1 / (acc + 1) });
+    acc++;
+    hud(accW, accH);
+  }
+  S.t = 0;
+  var wasInteracting = false;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.1, (now - lastT) / 1e3);
+    lastT = now;
+    if (busy || renderer.lost) return;
+    const clock = !paused && (S.anim || S.autoRot || S.drift || S.orbitLight);
+    if (clock) {
+      S.t += dt * S.animSpeed;
+      dirty = true;
+    }
+    const interacting = ptrs.size > 0 || now - lastInteract < 180;
+    if (interacting !== wasInteracting) {
+      wasInteracting = interacting;
+      dirty = true;
+    }
+    if (!dirty) {
+      if (!clock && !interacting && acc > 0 && acc < S.viewAA) {
+        try {
+          refineStep();
+        } catch (e) {
+          showErr(e);
+        }
+      }
+      return;
+    }
+    dirty = false;
+    try {
+      const { w, h } = viewSize(interacting);
+      renderFrame(w, h);
+      if (clock && !interacting) for (let i = 1; i < S.liveAA; i++) refineStep();
+    } catch (e) {
+      showErr(e);
+    }
+  }
+  new ResizeObserver(markDirty).observe(canvas);
+  renderer.onRestored = () => {
+    tryCompile();
+    markDirty();
+  };
+  requestAnimationFrame(frame);
+  var RES2 = [["1080p", 1920, 1080], ["1440p", 2560, 1440], ["4K", 3840, 2160], ["5K", 5120, 2880], ["Square 2K", 2048, 2048], ["Square 4K", 4096, 4096], ["8K", 7680, 4320]];
+  var cancelled = false;
+  function openModal() {
+    $("modal").classList.remove("hide");
+    $("hqW").value = S.hqW;
+    $("hqH").value = S.hqH;
+    noteUpdate();
+    const box2 = $("resBtns");
+    box2.innerHTML = "";
+    RES2.forEach(([n, w, h]) => {
+      const b = document.createElement("button");
+      b.textContent = n;
+      b.onclick = () => {
+        $("hqW").value = w;
+        $("hqH").value = h;
+        noteUpdate();
+      };
+      box2.append(b);
+    });
+  }
+  function dims() {
+    const m = renderer.maxDim();
+    return { W: clamp(parseInt($("hqW").value) || 1920, 64, m), H: clamp(parseInt($("hqH").value) || 1080, 64, m) };
+  }
+  function noteUpdate() {
+    const { W, H } = dims(), n = S.hqAA * S.hqAA;
+    $("hqNote").textContent = W + "\xD7" + H + " \xB7 " + n + " samples/pixel \xB7 " + S.hqSteps + " march steps. Renders in tiles through the same shader as the viewer; frame " + (S.t || 0).toFixed(2) + "s is frozen.";
+  }
+  $("hqW").oninput = $("hqH").oninput = noteUpdate;
+  $("bHQ").onclick = openModal;
+  $("hqCancel").onclick = () => {
+    cancelled = true;
+    if (!busy) $("modal").classList.add("hide");
+  };
+  $("hqGo").onclick = async () => {
+    if (busy) return;
+    const { W, H } = dims();
+    S.hqW = W;
+    S.hqH = H;
+    busy = true;
+    cancelled = false;
+    $("hqGo").disabled = true;
+    $("progBar").style.width = "0";
+    const e = effective(S, S.t || 0);
+    try {
+      const t0 = performance.now();
+      const img = await exportImage(
+        renderer,
+        e,
+        { W, H, aa: S.hqAA, steps: S.hqSteps, tile: 256 },
+        { cancelled: () => cancelled, progress: (p) => {
+          $("progBar").style.width = (p * 100).toFixed(1) + "%";
+          $("hqNote").textContent = "Rendering " + Math.round(p * 100) + "% \xB7 " + ((performance.now() - t0) / 1e3).toFixed(0) + "s";
+        } }
+      );
+      if (img) {
+        const blob = await toPNGBlob(img);
+        download(blob, "gnarl-" + stamp() + "-" + W + "x" + H + "-v" + VERSION + ".png");
+        $("hqNote").textContent = "Done in " + ((performance.now() - t0) / 1e3).toFixed(1) + "s.";
+      } else $("hqNote").textContent = "Cancelled.";
+    } catch (err) {
+      showErr(err);
+    }
+    busy = false;
+    $("hqGo").disabled = false;
+    markDirty();
+    if (cancelled) $("modal").classList.add("hide");
+  };
+  initVideoUI({ S, renderer, setBusy: (b) => {
+    busy = b;
+  }, after: markDirty, download, stamp, VERSION });
+  window.__gnarl = { TABS, jitter, S, renderer, VARIATIONS, PRESETS, DEFAULTS, effective, exportImage, exportVideo, frameState, frameCount, loadPreset: api.loadPreset, BUILD };
+})();
+
+</script>
+</body>
+</html>

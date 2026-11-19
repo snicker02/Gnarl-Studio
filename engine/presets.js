@@ -1,0 +1,43 @@
+// Presets are partial overrides on DEFAULTS. Fold ids: 0 Gnarly 1 Sine 2 FBM 3 Eye Vortex 4 Scroll 5 Mandala.
+const G = { iters: 8, scale: 2, offx: 1, offy: 1, offz: 1, fx1: 3.5, fy1: 3.5, fx2: 2, fy2: 2, gmode: 1 };
+const TOP = { camTheta: 0, camPhi: 0, camDist: 3.2 };   // head-on view of the XY relief plane
+const SOLID = { iters: 3, scale: 1.4, offx: 1, offy: 1, offz: 1 };   // low-iteration solids keep a valid distance estimate
+export const PRESETS = [
+  { n: 'Gnarly Gold',          s: { ...G, ...SOLID, fold: 0, pal: 4, ccyc: 2.5, glow: .35, camDist: 4.5, camTheta: .4, camPhi: .35 } },
+  { n: 'Gnarly Plane Gold',    s: { ...G, fold: 0, plane: 1, planedepth: 2.5, pal: 4, ccyc: 2.5, glow: .5, ...TOP, camDist: 3.5 } },
+  { n: 'Gnarly Tangent',       s: { ...G, ...SOLID, fold: 0, gmode: 6, offx: .5, offy: .5, offz: .5, fx1: 4.5, fy1: 4.5, fx2: 2.5, fy2: 2.5, rx: .2, ry: .3, pal: 1, ccyc: 3, glow: .5, camDist: 4.2, camTheta: .5, camPhi: .4 } },
+  { n: 'Gnarly Log',           s: { ...G, ...SOLID, fold: 0, gmode: 5, fx1: 5, fy1: 5, fx2: 3, fy2: 3, ry: .2, pal: 2, ccyc: 2.2, glow: .4, camDist: 4.5, camTheta: .4, camPhi: .3 } },
+  { n: 'Gnarly Kaleido 5',     s: { ...G, fold: 0, sym: 5, plane: 1, planedepth: 2.2, pal: 5, ccyc: 2.2, glow: .5, ...TOP, camDist: 4 } },
+  { n: 'Sine Warp Plane',      s: { ...G, fold: 1, iters: 6, scale: 1.8, offx: .8, offy: .8, offz: .8, fx1: 4, fy1: 4, fx2: 2.5, fy2: 2.5, plane: 1, planedepth: 3, pal: 1, ccyc: 3.5, glow: .7, ...TOP, camDist: 3.5 } },
+  { n: 'Sine Warp Solid',      s: { ...G, fold: 1, iters: 6, scale: 1.8, offx: .8, offy: .8, offz: .8, fx1: 2.2, fy1: 2.2, fx2: 1.6, fy2: 1.6, pal: 7, ccyc: 2.6, glow: .5, camDist: 4.5, camTheta: .6, camPhi: .4 } },
+  { n: 'FBM Clouds',           s: { ...G, fold: 2, iters: 3, scale: 1.1, offx: 1.6, offy: 1.6, offz: 1.6, fx1: 1.2, fy1: 1, fx2: 1.4, pal: 8, ccyc: 2, glow: .5, camDist: 4.5, camTheta: .5, camPhi: .4 } },
+  { n: 'Eye Vortex Teal',      s: { ...G, fold: 3, iters: 6, offx: .8, offy: .8, offz: .8, fx1: 4, fy1: 4, fx2: 3, fy2: 3, ry: .1, eyecell: 2.2, eyedepth: 5, eyespin: 2, eyesq: 3, jitter: 0, pal: 7, ccyc: 3, glow: .6, camDist: 5, camTheta: .3, camPhi: .4 } },
+  { n: 'Eye Vortex Fire',      s: { ...G, fold: 3, iters: 6, offx: .8, offy: .8, offz: .8, fx1: 3.5, fy1: 3.5, fx2: 2.5, fy2: 2.5, eyecell: 1.8, eyedepth: 6, eyespin: 2.5, eyesq: 2, jitter: 0, pal: 1, ccyc: 2.5, glow: .7, camDist: 5, camTheta: .35, camPhi: .38 } },
+  { n: 'Eye Vortex Relief',    s: { ...G, fold: 3, plane: 1, planedepth: 2.4, mflat: .22, iters: 6, offx: .8, offy: .8, offz: .8, fx1: 4, fy1: 4, eyecell: 1.6, eyedepth: 5.5, eyespin: 2.2, eyesq: 3, jitter: .8, mirror: 1, pal: 2, ccyc: 2.4, glow: .6, ...TOP, camDist: 4 } },
+  { n: 'Scroll Tile Green',    s: { ...G, fold: 4, iters: 6, ry: .1, scrtile: 2, scrroll: 4, scrwave: 1.2, pal: 3, ccyc: 2.8, glow: .4, camDist: 5, camTheta: .3, camPhi: .35 } },
+  { n: 'Scroll Tile Chrome',   s: { ...G, fold: 4, iters: 7, rx: .1, ry: .2, fx1: 4, fy1: 4, fx2: 2.5, fy2: 2.5, scrtile: 1.8, scrroll: 5, scrwave: 1.5, pal: 5, ccyc: 1.8, glow: .5, metal: .7, rough: .25, camDist: 4.8, camTheta: .4, camPhi: .4 } },
+  { n: 'Mandala Emerald Bloom',s: { ...G, fold: 5, iters: 7, scale: 1.9, fx1: 4, fy1: 4, fx2: 2.2, fy2: 2.2, pal: 3, ccyc: 2.4, glow: .5, mpetals: 4, mflat: .16, meyeblend: .7, eyecell: 1.1, eyesq: 2.8, eyespin: 1.4, eyedepth: 5, jitter: 1, ...TOP } },
+  { n: 'Mandala Azure Lattice',s: { ...G, fold: 5, iters: 8, scale: 2.1, fx1: 4.5, fy1: 4.5, fx2: 2.5, fy2: 2.5, pal: 2, ccyc: 1.9, glow: .6, mpetals: 4, mflat: .14, meyeblend: .8, eyecell: .95, eyesq: 3.2, eyespin: 1.7, eyedepth: 6, jitter: 1, ...TOP } },
+  { n: 'Mandala Ember 6',      s: { ...G, fold: 5, iters: 7, scale: 2, fx1: 4, fy1: 4, fx2: 2.2, fy2: 2.2, pal: 6, ccyc: 2.6, glow: .55, mpetals: 6, mflat: .2, meyeblend: .75, eyecell: 1.2, eyesq: 2.6, eyespin: 1.8, eyedepth: 5.5, jitter: 1, seed: 3, ...TOP } },
+  { n: 'Mandala Ortho Plaque', s: { ...G, fold: 5, iters: 7, scale: 2, pal: 4, ccyc: 2.2, glow: .4, mpetals: 8, mflat: .18, meyeblend: .7, eyecell: 1, eyesq: 3, eyespin: 1.6, eyedepth: 5.5, jitter: 1, ortho: 1, orthoScale: 3.2, metal: .5, rough: .35, ...TOP, camDist: 6 } },
+  { n: 'Log-Spiral Sunflower', s: { ...G, fold: 6, mpetals: 8, spiral: .6, eyecell: 1, eyedepth: 5, eyespin: 1.4, eyesq: 3, jitter: .8, mflat: .2, meyeblend: .75, pal: 6, ccyc: 2.4, glow: .5, seed: 2, ...TOP, camDist: 4 } },
+  { n: 'Log-Spiral Vortex',   s: { ...G, fold: 6, mpetals: 5, spiral: 1.4, eyecell: 1, eyedepth: 6, eyespin: 2, eyesq: 3.4, jitter: .6, mflat: .18, meyeblend: .8, pal: 2, ccyc: 2, glow: .6, seed: 5, ...TOP, camDist: 4 } },
+  { n: 'Honeycomb Eyes Gold', s: { ...G, fold: 7, eyecell: 1.5, eyedepth: 2.6, eyespin: 2, eyesq: 4, jitter: .8, mflat: .2, meyeblend: .8, pal: 4, ccyc: 2.2, glow: .45, metal: .4, ...TOP, camDist: 4.5 } },
+  { n: 'Honeycomb Round Teal',s: { ...G, fold: 7, eyecell: 1.3, eyedepth: 3, eyespin: 1, eyesq: 1.4, jitter: 1, mflat: .18, meyeblend: .7, pal: 7, ccyc: 2.6, glow: .55, seed: 4, ...TOP, camDist: 4.5 } },
+  { n: 'Truchet Ribbons',     s: { ...G, fold: 8, eyecell: 1.2, eyedepth: 3, twidth: .22, mflat: .22, meyeblend: .8, pal: 5, ccyc: 1.6, glow: .5, seed: 1, ...TOP, camDist: 4.5 } },
+  { n: 'Truchet Fine Weave',  s: { ...G, fold: 8, eyecell: .8, eyedepth: 4, twidth: .14, mflat: .2, meyeblend: 1, pal: 3, ccyc: 1.8, glow: .45, metal: .5, rough: .3, seed: 7, ...TOP, camDist: 4.5 } },
+  { n: 'Ripple Moire 7',      s: { ...G, fold: 9, mpetals: 7, eyecell: 1.6, eyedepth: 4, eyespin: 0, jitter: .3, mflat: .22, pal: 2, ccyc: 1.8, glow: .5, ...TOP, camDist: 5 } },
+  { n: 'Ripple Spiral Waves', s: { ...G, fold: 9, mpetals: 4, eyecell: 1.4, eyedepth: 3, eyespin: 2, jitter: .2, mflat: .2, pal: 8, ccyc: 2.2, glow: .55, ...TOP, camDist: 5 } },
+  { n: 'Chladni Sand Lines',   s: { ...G, fold: 10, mpetals: 7, eyedepth: 3, eyecell: 2.4, mflat: .22, meyeblend: 1, pal: 4, ccyc: 1.6, glow: .45, metal: .4, ...TOP, camDist: 4.5 } },
+  { n: 'Chladni Plate Surface',s: { ...G, fold: 10, mpetals: 5, eyedepth: 8, eyecell: 3, mflat: .3, meyeblend: 0, pal: 7, ccyc: 2.2, glow: .5, ...TOP, camDist: 4.5 } },
+  { n: 'Quasicrystal 7',       s: { ...G, fold: 11, mpetals: 7, eyedepth: 4, eyecell: 2.2, eyesq: 3, mflat: .24, meyeblend: .8, pal: 6, ccyc: 2, glow: .5, ...TOP, camDist: 5 } },
+  { n: 'Quasicrystal 5 Smooth',s: { ...G, fold: 11, mpetals: 5, eyedepth: 5, eyecell: 2.4, eyesq: 2, mflat: .22, meyeblend: 0, pal: 2, ccyc: 2.2, glow: .55, ...TOP, camDist: 5 } },
+  { n: 'Drum Mode 6',          s: { ...G, fold: 12, mpetals: 6, eyedepth: 5, eyecell: 1.6, spiral: 0, mflat: .26, meyeblend: 0, pal: 5, ccyc: 2.4, glow: .5, ...TOP, camDist: 5 } },
+  { n: 'Drum Spiral Galaxy',   s: { ...G, fold: 12, mpetals: 3, eyedepth: 4, eyecell: 1.8, spiral: 2.5, mflat: .26, meyeblend: .2, pal: 8, ccyc: 2, glow: .55, ...TOP, camDist: 5 } },
+  { n: 'Raindrop Pond',        s: { ...G, fold: 13, eyedepth: 4, eyecell: 1.8, jitter: 1.5, meyeblend: .5, mflat: .3, pal: 2, ccyc: 1.6, glow: .55, seed: 3, ...TOP, camDist: 5 } },
+  { n: 'Raindrop Storm',       s: { ...G, fold: 13, eyedepth: 5, eyecell: 1.2, jitter: 1.5, meyeblend: .8, mflat: .32, pal: 7, ccyc: 2, glow: .5, seed: 9, metal: .3, ...TOP, camDist: 5 } },
+  { n: 'Gnarled Ripples',      s: { ...G, fold: 9, iters: 4, mpetals: 5, eyecell: 2, eyedepth: 4, eyespin: 1, jitter: .5, mflat: .24, warp: .7, fx1: 3, fy1: 3.4, fx2: 1.6, fy2: 1.8, pal: 6, ccyc: 2, glow: .5, ...TOP, camDist: 5 } },
+  { n: 'Gnarled Honeycomb',    s: { ...G, fold: 7, iters: 3, eyecell: 1.5, eyedepth: 2.6, eyespin: 2, eyesq: 4, jitter: .8, mflat: .2, meyeblend: .8, warp: .5, fx1: 2.4, fy1: 2.4, fx2: 1.4, fy2: 1.4, pal: 4, ccyc: 2.2, glow: .45, ...TOP, camDist: 4.5 } },
+  { n: 'Warped Chladni',       s: { ...G, fold: 10, iters: 4, mpetals: 6, eyedepth: 4, eyecell: 2.6, mflat: .22, meyeblend: 1, warp: .8, fx1: 2.2, fy1: 2.6, fx2: 1.4, fy2: 1.6, pal: 2, ccyc: 1.8, glow: .5, ...TOP, camDist: 4.5 } },
+];
+for (const p of PRESETS) if (p.s.fold >= 6) p.s.iters = Math.min(p.s.iters ?? 4, 4);   // relief 'Warp iterations' slider is 1..6
