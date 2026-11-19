@@ -28,9 +28,11 @@ uniform sampler2D u_tex;
 `;
 
 const COMMON = `
-float h2(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5); }
+// sin-free hash for per-cell constants: sin() of large arguments is implemented with very different accuracy on different GPUs, which can flip whole cells between frames
+float hq(vec2 p){ vec3 q=fract(vec3(p.xyx)*0.1031); q+=dot(q,q.yzx+33.33); return fract((q.x+q.y)*q.z); }
+float h2(vec2 p){ return hq(p); }
 float hs2(vec2 p){ return h2(p+vec2(u_seed*17.13,u_seed*5.71)); }
-float h3(vec3 p){ return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5); }
+float h3(vec3 p){ vec3 q=fract(p*0.1031); q+=dot(q,q.zyx+31.32); return fract((q.x+q.y)*q.z); }
 vec3 cospal(float t,vec3 a,vec3 b,vec3 c,vec3 d){ return a+b*cos(6.28318*(c*t+d)); }
 mat3 rX(float a){ float c=cos(a),s=sin(a); return mat3(1,0,0,0,c,-s,0,s,c); }
 mat3 rY(float a){ float c=cos(a),s=sin(a); return mat3(c,0,s,0,1,0,-s,0,c); }

@@ -18,8 +18,11 @@ vec2 de_var(vec3 pos){
     vec2 c=base+vec2(float(ox),float(oy))+0.5; float d=length(gp-c);
     if(d<nearestEuc){ nearestEuc=d; nearestC=c; } } }
   vec2 q=gp-nearestC;
-  float ch=hs2(nearestC*7.31+3.7), ch2=hs2(nearestC*13.1+91.3), ch3=hs2(nearestC*5.9+47.2);
-  float sizeJ=mix(1.0,0.65+ch*0.7,u_jitter);
+  vec2 cid=floor(nearestC)+vec2(u_seed*17.0,u_seed*5.0);   // exact integer cell id
+  float ch=hq(cid+vec2(3.7,1.3)), ch2=hq(cid+vec2(91.3,17.1)), ch3=hq(cid+vec2(47.2,61.9));
+  // per-cell jitter would make height/thickness jump at cell borders (vertical cliffs the distance bound cannot see => speckle that flickers). Fade it to a common flat rim at the border.
+  float edge=max(abs(q.x),abs(q.y)), rimW=1.0-smoothstep(0.34,0.5,edge);
+  float sizeJ=mix(1.0,mix(1.0,0.65+ch*0.7,rimW),u_jitter);
   float shapeJ=mix(0.0,ch2*1.8,u_jitter);
   float ringJ=mix(1.0,0.6+ch3*0.9,u_jitter);
   float spinJ=(ch-0.5)*2.0*u_jitter;
@@ -41,7 +44,7 @@ vec2 de_var(vec3 pos){
   vein*=0.5;
   float ringH=(1.0-rings)*0.5;
   float centreBoost=1.0+1.8*exp(-r*0.55);
-  float height=(ringH*clamp(u_meyeblend,0.0,1.0)+vein*0.18*(1.0+u_offz*0.5))*u_mflat*centreBoost;
+  float height=(ringH*clamp(u_meyeblend,0.0,1.0)+vein*0.18*(1.0+u_offz*0.5))*u_mflat*centreBoost*rimW;
   float slab=mix(0.02,0.22,clamp(u_mflat,0.0,1.0))*sizeJ;
   float d=abs(pr.z-height)-slab;
   float gh=u_mflat*centreBoost*(0.75*u_eyedepth/(cellSz*0.65)+0.18*(1.0+u_offz*0.5)*3.0);

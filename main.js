@@ -89,15 +89,16 @@ $('bSnap').onclick = () => {
   const { w, h } = viewSize(false); renderFrame(w, h); while (acc < S.viewAA) refineStep();
   canvas.toBlob(b => download(b, 'gnarl-snapshot-' + stamp() + '.png'));
 };
-let rec = null;
+let rec = null, recTrack = null;
 $('bRec').onclick = () => {
   if (rec) { rec.stop(); return; }
-  const stream = canvas.captureStream(30), chunks = [];
+  // frame-stepped capture: a frame is pushed exactly when one has been rendered (no timer beating against the render loop => no duplicated/skipped frames)
+  const stream = canvas.captureStream(0), chunks = []; recTrack = stream.getVideoTracks()[0];
   const mime = ['video/webm;codecs=vp9', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
   rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 });
   rec.ondataavailable = e => e.data.size && chunks.push(e.data);
-  rec.onstop = () => { download(new Blob(chunks, { type: 'video/webm' }), 'gnarl-' + stamp() + '.webm'); rec = null; $('bRec').textContent = '⏺ Record'; };
-  rec.start(); $('bRec').textContent = '⏹ Stop';
+  rec.onstop = () => { download(new Blob(chunks, { type: 'video/webm' }), 'gnarl-' + stamp() + '.webm'); rec = null; recTrack = null; $('bRec').textContent = '⏺ Record'; };
+  rec.start(); markDirty(); $('bRec').textContent = '⏹ Stop';
 };
 const stamp = () => VARIATIONS[S.fold].name.replace(/\W+/g, '') + '-' + Date.now().toString(36);
 
@@ -125,14 +126,14 @@ function frame(now) {
   if (busy || renderer.lost) return;
   const clock = !paused && (S.anim || S.autoRot || S.drift || S.orbitLight);
   if (clock) { S.t += dt * S.animSpeed; dirty = true; }
-  const interacting = ptrs.size > 0 || now - lastInteract < 180;
+  const interacting = !recTrack && (ptrs.size > 0 || now - lastInteract < 180);   // constant resolution while recording
   if (interacting !== wasInteracting) { wasInteracting = interacting; dirty = true; }
   if (!dirty) {
     if (!clock && !interacting && acc > 0 && acc < S.viewAA) { try { refineStep(); } catch (e) { showErr(e); } }
     return;
   }
   dirty = false;
-  try { const { w, h } = viewSize(interacting); renderFrame(w, h); if (clock && !interacting) for (let i = 1; i < S.liveAA; i++) refineStep(); } catch (e) { showErr(e); }
+  try { const { w, h } = viewSize(interacting); renderFrame(w, h); if (clock && !interacting) for (let i = 1; i < S.liveAA; i++) refineStep(); if (recTrack && recTrack.requestFrame) recTrack.requestFrame(); } catch (e) { showErr(e); }
 }
 new ResizeObserver(markDirty).observe(canvas);
 renderer.onRestored = () => { tryCompile(); markDirty(); };
