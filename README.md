@@ -1,4 +1,4 @@
-# Solid 3D Gnarl Studio v1.4.5
+# Solid 3D Gnarl Studio v1.5.0
 
 WebGL1 raymarched gnarl / eye-vortex / mandala-relief renderer. No runtime dependencies.
 
@@ -31,6 +31,9 @@ tools/validate.mjs     headless real-GL gate (see below)
 * Grain is a static per-pixel hash; drift/auto-rotate are pure functions of time, so a frozen frame re-renders identically.
 * Only one variation is compiled at a time (the old uber-shader is gone), so shader compile is fast and GPU-limit errors are far less likely.
 * Images upload power-of-two with REPEAT wrap and Y-flip at upload; one `matCol()` feeds surface and glow, so no palette leaks at blend 1.
+
+## 1.5.0
+Mobile pass. On phones the viewer is docked at the top and the Shape / Light / Colour / Camera / Render / Presets tabs sit directly under it (the title bar is hidden to make room); only the tab content scrolls. The bottom toolbar scrolls sideways instead of running off the screen. Two-finger drag pans (pinch still zooms). Bigger touch targets for sliders, reset buttons and tabs. Desktop layout unchanged.
 
 ## 1.4.5
 Stability hardening for Mandala Relief and all per-cell randomness: sin-free hashes on exact integer cell ids (sin() of large arguments differs between GPUs and can flip whole cells between frames); cell jitter fades to a flat rim so cell borders no longer have height cliffs. Random layouts change slightly vs 1.4.4 (same style).

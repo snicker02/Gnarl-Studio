@@ -1,5 +1,5 @@
 // Flat, JSON-serialisable state. Every key here is a real setting; DEFAULTS also feeds the per-control reset buttons.
-export const VERSION = '1.4.5';
+export const VERSION = '1.5.0';
 
 export const DEFAULTS = Object.freeze({
   // shape

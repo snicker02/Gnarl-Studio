@@ -70,8 +70,12 @@ canvas.addEventListener('pointermove', e => {
   const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
   lastInteract = performance.now();
   if (ptrs.size === 2) {
+    // Two fingers: pinch to dolly, drag together to pan (the midpoint moves by half this finger's motion).
     const [a, b] = [...ptrs.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y);
     if (lastPinch) S.camDist = clamp(S.camDist * lastPinch / d, 0.05, 50); lastPinch = d;
+    const k = S.camDist * 0.0016, th = S.camTheta, mx = dx / 2, my = dy / 2;
+    S.tx -= (Math.cos(th) * mx) * k; S.tz += (Math.sin(th) * mx) * k; S.ty += my * k;
+  } else if (ptrs.size > 2) { return;
   } else if (p.b === 2 || p.shift || e.shiftKey) {
     const k = S.camDist * 0.0016, th = S.camTheta;
     S.tx -= (Math.cos(th) * dx) * k; S.tz += (Math.sin(th) * dx) * k; S.ty += dy * k;
