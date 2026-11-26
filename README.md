@@ -1,4 +1,4 @@
-# Solid 3D Gnarl Studio v1.5.0
+# Solid 3D Gnarl Studio v1.6.0
 
 WebGL1 raymarched gnarl / eye-vortex / mandala-relief renderer. No runtime dependencies.
 
@@ -31,6 +31,9 @@ tools/validate.mjs     headless real-GL gate (see below)
 * Grain is a static per-pixel hash; drift/auto-rotate are pure functions of time, so a frozen frame re-renders identically.
 * Only one variation is compiled at a time (the old uber-shader is gone), so shader compile is fast and GPU-limit errors are far less likely.
 * Images upload power-of-two with REPEAT wrap and Y-flip at upload; one `matCol()` feeds surface and glow, so no palette leaks at blend 1.
+
+## 1.6.0
+- **⇄ Shelf** in the transport bar: send the view to other snicker02 apps, or load a shelf image as the image source.
 
 ## 1.5.0
 Mobile pass. On phones the viewer is docked at the top and the Shape / Light / Colour / Camera / Render / Presets tabs sit directly under it (the title bar is hidden to make room); only the tab content scrolls. The bottom toolbar scrolls sideways instead of running off the screen. Two-finger drag pans (pinch still zooms). Bigger touch targets for sliders, reset buttons and tabs. Desktop layout unchanged.
@@ -96,3 +99,13 @@ Tips: Plane/relief views use camera elevation 0 (head-on to the XY plane). Solid
 
 ---
 Created with help from Claude AI
+
+## Shared image shelf
+
+The **⇄ Shelf** button opens the image shelf shared by all apps on [snicker02.github.io](https://snicker02.github.io/#shelf). It stores images in this browser only (IndexedDB), and every app on the site can read the same shelf.
+
+- **Save current** puts the current view on the shelf.
+- **Send to ↗** opens another app in a new tab with the image already loaded.
+- **Load here** brings a shelf image into this app as the image source, the same as loading or dropping a file. Opening the app with `?shelf=<id>` does the same on start, which is how Send to works.
+
+The shelf code lives in [`snicker02.github.io/shared/bridge.js`](https://github.com/snicker02/snicker02.github.io/blob/main/shared/bridge.js). If it can't load (for example when you're offline), the app works as before and the button is hidden.

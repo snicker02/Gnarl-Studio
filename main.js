@@ -89,10 +89,23 @@ $('bPlay').onclick = () => { paused = !paused; $('bPlay').textContent = paused ?
 $('bCam').onclick = () => { for (const k of ['camTheta','camPhi','camDist','camFov','tx','ty','tz']) S[k] = DEFAULTS[k]; ui.refresh(); markDirty(); };
 $('bRand').onclick = () => { S.seed = Math.floor(Math.random() * 100); ui.refresh(); markDirty(); };
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+function snapView() { const { w, h } = viewSize(false); renderFrame(w, h); while (acc < S.viewAA) refineStep(); }
 $('bSnap').onclick = () => {
-  const { w, h } = viewSize(false); renderFrame(w, h); while (acc < S.viewAA) refineStep();
+  snapView();
   canvas.toBlob(b => download(b, 'gnarl-snapshot-' + stamp() + '.png'));
 };
+// shared image shelf (snicker02.github.io/shared/bridge.js)
+if (window.SnickerShelf) {
+  window.SnickerShelf.mount({
+    app: 'Gnarl-Studio',
+    button: $('bShelf'),
+    onImage: f => loadImageFile(f),
+    getImage: () => { snapView(); return new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error('encode failed')), 'image/png')); },
+    getMeta: () => ({ name: 'gnarl-' + stamp() + '.png' }),
+  });
+} else {
+  $('bShelf').hidden = true;
+}
 let rec = null, recTrack = null;
 $('bRec').onclick = () => {
   if (rec) { rec.stop(); return; }
