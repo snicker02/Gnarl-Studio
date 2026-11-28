@@ -97,6 +97,10 @@ Symmetry fold (any variation), cell randomness + seed (Eye Vortex, Mandala), ort
 
 Tips: Plane/relief views use camera elevation 0 (head-on to the XY plane). Solid Gnarly/FBM want low iteration counts (2-4) to keep a valid distance estimate.
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 ---
 Created with help from Claude AI
 
@@ -109,7 +113,3 @@ The **⇄ Shelf** button opens the image shelf shared by all apps on [snicker02.
 - **Load here** brings a shelf image into this app as the image source, the same as loading or dropping a file. Opening the app with `?shelf=<id>` does the same on start, which is how Send to works.
 
 The shelf code lives in [`snicker02.github.io/shared/bridge.js`](https://github.com/snicker02/snicker02.github.io/blob/main/shared/bridge.js). If it can't load (for example when you're offline), the app works as before and the button is hidden.
-
-## License
-
-MIT — see [LICENSE](LICENSE).
