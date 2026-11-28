@@ -97,6 +97,10 @@ Symmetry fold (any variation), cell randomness + seed (Eye Vortex, Mandala), ort
 
 Tips: Plane/relief views use camera elevation 0 (head-on to the XY plane). Solid Gnarly/FBM want low iteration counts (2-4) to keep a valid distance estimate.
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 ---
 Created with help from Claude AI
 
